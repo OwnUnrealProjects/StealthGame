@@ -1,13 +1,16 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
 #include "FPSCharacter.h"
+
 #include "FPSProjectile.h"
+#include "FPSObjectiveActor.h"
+
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
-
+#include "DrawDebugHelpers.h"
 #include "Components/PawnNoiseEmitterComponent.h"
 
 
@@ -34,17 +37,20 @@ AFPSCharacter::AFPSCharacter()
 
 	NoiseEmitterComp = CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("NoiseEmitter"));
 
-	
+	bReplicates = true;
 }
 
 
 void AFPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AFPSCharacter, bIsCarryingObjective);
-
-	//DOREPLIFETIME_CONDITION(AFPSCharacter, bIsCarryingObjective, COND_OwnerOnly);
+	//DOREPLIFETIME(AFPSCharacter, bIsCarryingObjective);
+	//DOREPLIFETIME_CONDITION(AFPSCharacter, bIsCarryingObjective, COND_ReplayOnly);
+	DOREPLIFETIME_CONDITION(AFPSCharacter, bIsCarryingObjective, COND_OwnerOnly);
+	DOREPLIFETIME(AFPSCharacter, bGuardSeen);
+	DOREPLIFETIME(AFPSCharacter, bReturnObjective);
 }
+
 
 void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -70,6 +76,24 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 //
 //}
 
+FString AFPSCharacter::GetEnumText(ENetRole Role)
+{
+	switch (Role)
+	{
+	case ROLE_None:
+		return "None";
+	case ROLE_SimulatedProxy:
+		return "SimulatedProxy";
+	case ROLE_AutonomousProxy:
+		return "AutonomousProxy";
+	case ROLE_Authority:
+		return "Authority";
+	default:
+		return "ERROR";
+	}
+}
+
+
 
 void AFPSCharacter::Tick(float DeltaTime)
 {
@@ -81,10 +105,17 @@ void AFPSCharacter::Tick(float DeltaTime)
 		NewRotatoin.Pitch = RemoteViewPitch * 360.f / 250.f;
 
 		CameraComponent->SetRelativeRotation(NewRotatoin);
+
+		
 	}
 	
+	
+	DrawDebugString(GetWorld(), FVector(200, 0, 100.f), GetEnumText(Role), this, FColor::Red, DeltaTime);
+	DrawDebugString(GetWorld(), FVector(200, 0, 150.f), GetName(), this, FColor::White, DeltaTime);
+	DrawDebugString(GetWorld(), FVector(200, 0, 200.f), FString::Printf(TEXT("CarryingObjective = %i"), bIsCarryingObjective), this, FColor::Red, DeltaTime);
 
 }
+
 
 void AFPSCharacter::Fire()
 {
@@ -152,4 +183,31 @@ void AFPSCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(GetActorRightVector(), Value);
 	}
+}
+
+void AFPSCharacter::UnPossessed()
+{
+
+	//Super::UnPossessed();
+	Destroy(true, true);
+	UE_LOG(LogTemp, Warning, TEXT("UNPOSSESSED function"));
+
+	if (bReturnObjective)
+	{
+		//Set Spawn Collision Handling Override
+		FActorSpawnParameters ActorSpawnParams;
+		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		ActorSpawnParams.Instigator = this;
+
+		auto Objective = GetWorld()->SpawnActor<AFPSObjectiveActor>(BPObjective, GetActorLocation(), FRotator::ZeroRotator, ActorSpawnParams);
+		if (Objective)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SCharacter --- Objective Name = %s"), *Objective->GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SCharacter ---  Objective is NULL"));
+		}
+	}
+
 }

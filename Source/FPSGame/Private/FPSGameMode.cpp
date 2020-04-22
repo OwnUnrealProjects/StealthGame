@@ -5,8 +5,9 @@
 #include "FPSCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 #include "FPSGameState.h"
-#include "FPSPlayerController.h"
+#include "FPSObjectiveActor.h"
 
+#include "FPSPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/TargetPoint.h"
@@ -26,6 +27,7 @@ AFPSGameMode::AFPSGameMode()
 }
 
 
+
 void AFPSGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -34,17 +36,14 @@ void AFPSGameMode::BeginPlay()
 	//GameStateClass = AFPSGameState::StaticClass();
 }
 
-void AFPSGameMode::CompleteMission(APawn* InstigatorPawn, bool bMissionSuccess)
+void AFPSGameMode::CompleteMission()
 {
-	if (InstigatorPawn)
-	{
+
 		/// if check DisableInput() with buttons Alt + G two times
 		/// we can see it's parameter may be PlayerController or NULL
-		//InstigatorPawn->DisableInput(nullptr); // we put it in GameState class
-		UE_LOG(LogTemp, Warning, TEXT("GameMode CompleteMission"))
+	
 		TArray<AActor*> BP_ClassArray;
-		UGameplayStatics::GetAllActorsOfClass(this, BlueprintClass, BP_ClassArray);
-
+		UGameplayStatics::GetAllActorsOfClass(this, BPTarget, BP_ClassArray);
 
 		if (BP_ClassArray.Num() > 0)
 		{
@@ -55,42 +54,69 @@ void AFPSGameMode::CompleteMission(APawn* InstigatorPawn, bool bMissionSuccess)
 
 		/// TSubClassOf<>() can not access the class which is created already
 		/// in this cases CameraLocatoin must be created in the world for get him Location()
-		   /// but instead of CameraLocation we can use FVector & FRotator directly
-		//NewViewTarget = GetWorld()->SpawnActor<AActor>(BlueprintClass);
-		////CameraLocation = GetWorld()->SpawnActor<ATargetPoint>(Location);
-		//NewViewTarget->SetActorLocation(FVector(-1250.000000, 680.000000, 1270.000000));
-		//NewViewTarget->SetActorRotation(FRotator(-27.199799, -32.999878, 0.000006));
-		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; It++)
+		/// but instead of CameraLocation we can use FVector & FRotator directly
+		
+
+		AFPSGameState* GS = GetGameState<AFPSGameState>();
+		if (GS)
 		{
-			APlayerController* PC = It->Get();
-			if (PC && NewViewTarget)
-			{
-				//UE_LOG(LogTemp, Warning, TEXT("TargetLocation = %s"), *CameraLocation->GetActorLocation().ToString());
-				PC->SetViewTargetWithBlend(NewViewTarget, 1.5f, EViewTargetBlendFunction::VTBlend_Cubic);
-			}
+			GS->MultiCastOnMissionComplite(NewViewTarget);
+			UE_LOG(LogTemp, Warning, TEXT("GameState Is not NULL"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GameState Is NULL"));
 		}
 
-		//APlayerController* PC = Cast<APlayerController>(InstigatorPawn->GetController());
-		//if (PC && NewViewTarget)
-		//{
-		//	//UE_LOG(LogTemp, Warning, TEXT("TargetLocation = %s"), *CameraLocation->GetActorLocation().ToString());
-		//	PC->SetViewTargetWithBlend(NewViewTarget, 1.5f, EViewTargetBlendFunction::VTBlend_Cubic);
-		//}
+
+	
+
+	//OnMissionCompleted(InstigatorPawn, bMissionSuccess);
+
+}
+
+
+void AFPSGameMode::MissionFaild(APawn * SeenPawn)
+{
+	TArray<AActor*> BP_ClassArray;
+	UGameplayStatics::GetAllActorsOfClass(this, BPTarget, BP_ClassArray);
+
+	if (BP_ClassArray.Num() > 0)
+	{
+		NewViewTarget = BP_ClassArray[0];
+		//UE_LOG(LogTemp, Warning, TEXT("BP_BlueprintArray Number = %i"), BP_ClassArray.Num());
+
 	}
+
+	//auto SeenPlayer = Cast<AFPSCharacter>(SeenPawn);
+	//if (SeenPlayer->bIsCarryingObjective)
+	//{
+	//	//Set Spawn Collision Handling Override
+	//	FActorSpawnParameters ActorSpawnParams;
+	//	ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	//	//ActorSpawnParams.Instigator = this;
+
+	//	FVector location = SeenPawn->GetActorLocation();
+
+	//	auto Objective = GetWorld()->SpawnActor<AFPSObjectiveActor>(BPObjective, location, FRotator::ZeroRotator, ActorSpawnParams);
+	//	if (Objective)
+	//	{
+	//		UE_LOG(LogTemp, Warning, TEXT("Objective Name = %s"), *Objective->GetName());
+	//	}
+	//	else
+	//	{
+	//		UE_LOG(LogTemp, Warning, TEXT("Objective is NULL"));
+	//	}
+	//}
 
 	AFPSGameState* GS = GetGameState<AFPSGameState>();
 	if (GS)
 	{
-		GS->MultiCastOnMissionComplite(InstigatorPawn, bMissionSuccess);
+		GS->MissionFailed(NewViewTarget, SeenPawn, false);
 		UE_LOG(LogTemp, Warning, TEXT("GameState Is not NULL"));
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("GameState Is NULL"));
 	}
-
-	OnMissionCompleted(InstigatorPawn, bMissionSuccess);
-
 }
-
-

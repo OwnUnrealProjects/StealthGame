@@ -9,6 +9,7 @@
 #include "Engine.h"
 
 #include "FPSGameMode.h"
+#include "../Public/FPSCharacter.h"
 
 
 // Sets default values
@@ -117,22 +118,26 @@ FString AFPSAIGuard::GetStateText(EAIState state)
 
 void AFPSAIGuard::OnPawnSeen(APawn * SeenPawn)
 {
-	if (!SeenPawn)
+	auto Gualty = Cast<AFPSCharacter>(SeenPawn);
+	if (!Gualty)
 		return;
-
+	//UE_LOG(LogTemp, Warning, TEXT("SeenPawn"));
 	
 	DrawDebugSphere(GetWorld(), SeenPawn->GetActorLocation(), 40.f, 10.f, FColor::Yellow, false, 10.f);
 
 	AFPSGameMode* GM = Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode());
-	if (GM && SeenPawn->IsControlled())
+	if (GM && Gualty->bGuardSeen)
 	{
-		GM->CompleteMission(SeenPawn, false);
-		SeenPawn->UnPossessed();
+
+		Gualty->bGuardSeen = false;
+		if (Gualty->bIsCarryingObjective)
+			Gualty->bReturnObjective = true;
+		GM->MissionFaild(SeenPawn);
 		
 	}
 
 	
-	FVector Direction = GetActorLocation() - SeenPawn->GetActorLocation();
+	FVector Direction = SeenPawn->GetActorLocation() - GetActorLocation();
 	Direction.Normalize();
 	FRotator NewLookAt = FRotationMatrix::MakeFromX(Direction).Rotator();
 	NewLookAt.Pitch = 0.f;
@@ -169,6 +174,8 @@ void AFPSAIGuard::OnPawnHearing(APawn* NoiseInstigator, const FVector & Location
 	GetWorldTimerManager().ClearTimer(TimerHandle_ResetOrientation);
 	GetWorldTimerManager().SetTimer(TimerHandle_ResetOrientation, this, &AFPSAIGuard::ResetOrientation, 3.0f);
 
+	UE_LOG(LogTemp, Error, TEXT("Hearing Perception_2"));
+
 	SetAIState(EAIState::Suspisious);
 
 	// Stop Movement if Patrolling
@@ -182,6 +189,7 @@ void AFPSAIGuard::OnPawnHearing(APawn* NoiseInstigator, const FVector & Location
 
 void AFPSAIGuard::ResetOrientation()
 {
+	UE_LOG(LogTemp, Warning, TEXT("ResetOrinetaion"));
 	if (GuardState == EAIState::Alert)
 		return;
 
@@ -206,7 +214,7 @@ void AFPSAIGuard::SetAIState(EAIState State)
 	
 
 	/// Simulated Proxy don't executed
-	if (Role == ROLE_SimulatedProxy)
+	/*if (Role == ROLE_SimulatedProxy)
 	{
 		DrawDebugString(GetWorld(), FVector(200), GetStateText(GuardState), this, FColor::Green, 10.f);
 		UE_LOG(LogTemp, Warning, TEXT("Simulated Proxy = %s"), *GetStateText(GuardState));
@@ -216,7 +224,7 @@ void AFPSAIGuard::SetAIState(EAIState State)
 	{
 		DrawDebugString(GetWorld(), FVector(200), GetStateText(GuardState), this, FColor::Green, 20.f);
 		UE_LOG(LogTemp, Warning, TEXT("Authority = %s"), *GetStateText(GuardState));
-	}
+	}*/
 
 }
 

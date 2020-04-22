@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 
 #include "FPSCharacter.h"
+#include "FPSPlayerController.h"
 #include "FPSGameMode.h"
 
 
@@ -53,37 +54,56 @@ FString GetEnumText(ENetRole Role)
 	}
 }
 
-void AFPSExtractionZone::HandleOverlap(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor, 
+void AFPSExtractionZone::HandleOverlap(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor,
 	UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
 	AFPSCharacter* PlayerPawn = Cast<AFPSCharacter>(OtherActor);
 	if (!PlayerPawn)
 		return;
-	//UE_LOG(LogTemp, Warning, TEXT("Extraction Zone OverlapEven"))
-	if (PlayerPawn->IsLocallyControlled())
+	
+	
+	UE_LOG(LogTemp, Warning, TEXT("Extraction Zone Player name = %s,  CarryingObjective = %i"), *PlayerPawn->GetName(), PlayerPawn->bIsCarryingObjective)
+	if (PlayerPawn->bIsCarryingObjective)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Extraction Zone OverlapEven IsLocallyControlled Area CarryingObjective = %i"), PlayerPawn->bIsCarryingObjective)
-		if (PlayerPawn->bIsCarryingObjective)
+		/// GetAuthGameMode() == that this function will be executed only for Server
+		/// this is meaningful only MultiPlayer Game. In MultiPlayer Game this function Executed only Server
+		/// for Client GetAuthGameMode() = NULL
+		UE_LOG(LogTemp, Warning, TEXT("Extraction CarryingObjective Area Zone Player name = %s,  CarryingObjective = %i"), *PlayerPawn->GetName(), PlayerPawn->bIsCarryingObjective)
+		AFPSGameMode* GM = Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode());
+		if (GM)
 		{
-			/// GetAuthGameMode() == that this function will be executed only for Server
-			/// this is meaningful only MultiPlayer Game. In MultiPlayer Game this function Executed only Server
-			/// for Client GetAuthGameMode() = NULL
-			AFPSGameMode* GM = Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode());
-			if (GM)
+			
+			GM->CompleteMission(); // true
+		}
+
+		/*int32 index = 0;
+		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; It++)
+		{
+			++index;
+			AFPSPlayerController* PC = Cast<AFPSPlayerController>(It->Get());
+			if (PC && PC->IsLocalController())
 			{
-				GM->CompleteMission(PlayerPawn, true);
+				UE_LOG(LogTemp, Warning, TEXT("Idex = %i"), index);
+				UE_LOG(LogTemp, Warning, TEXT("Extraction CarryingObjective Area Zone Player name = %s,  CarryingObjective = %i"), *PlayerPawn->GetName(), PlayerPawn->bIsCarryingObjective)
+				PC->OnMissionCompleted(PlayerPawn, PlayerPawn->bIsCarryingObjective);
+				PC->GetPawn()->DisableInput(PC);
 			}
-		}
-		else
-		{
-			/// GamePlayStatics is a Class which include all Static functions
-			/// Some of that function returns UObject type but in case that static functions are singleton
-			/// it's return Object does not exists in Level
-			UGameplayStatics::PlaySound2D(this, ObjectiveMissingSOund);
-			FString role = GetEnumText(PlayerPawn->GetRemoteRole());
-			UE_LOG(LogTemp, Warning, TEXT("Extraction Zone Player name = %s,  Player Remote Role = %s"), *PlayerPawn->GetName(), *role);
-		}
+		}*/
+		
+		
 	}
+	else
+	{
+		/// GamePlayStatics is a Class which include all Static functions
+		/// Some of that function returns UObject type but in case that static functions are singleton
+		/// it's return Object does not exists in Level
+		UGameplayStatics::PlaySound2D(this, ObjectiveMissingSOund);
+		FString role = GetEnumText(PlayerPawn->Role);
+		UE_LOG(LogTemp, Warning, TEXT("Extraction Zone Player name = %s,  Player Role = %s"), *PlayerPawn->GetName(), *role);
+	
+	}
+
+	
 
 
 }

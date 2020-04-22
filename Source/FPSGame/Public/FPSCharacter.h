@@ -20,6 +20,10 @@ class AFPSCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+private:
+
+	FString GetEnumText(ENetRole Role);
+
 protected:
 
 	/** Pawn mesh: 1st person view  */
@@ -36,6 +40,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	UPawnNoiseEmitterComponent* NoiseEmitterComp;
+
 protected:
 
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -44,9 +49,15 @@ protected:
 public:
 	AFPSCharacter();
 
+public:
+
+
 	/** Projectile class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category="Projectile")
 	TSubclassOf<AFPSProjectile> ProjectileClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Spectating")
+	TSubclassOf<AActor> BPObjective;
 
 	/** Sound to play each time we fire */
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay")
@@ -56,12 +67,23 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
 	UAnimSequence* FireAnimation;
 
+	/* Winner Flag */
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "GamePlay")
 	bool bIsCarryingObjective;
+
+	/* Close the gate to call "Game Over" Witget in Multiple times */
+	UPROPERTY(Replicated)
+	bool bGuardSeen = true;
+
+	/* Check if Player must be return winner Flag */
+	UPROPERTY(Replicated)
+	bool bReturnObjective = false;
 
 public:
 
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void UnPossessed() override;
 
 protected:
 	

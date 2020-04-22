@@ -16,11 +16,13 @@ class AFPSGameMode : public AGameModeBase
 public:
 
 	AFPSGameMode();
-
-	void CompleteMission(APawn* InstigatorPawn, bool bMissionSuccess);
+	// TODO not need this Argument
+	void CompleteMission();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "GameMode")
 	void OnMissionCompleted(APawn* InstigatorPawn, bool bMissionSuccess);
+
+	void MissionFaild(APawn *SeenPawn);
 
 public:
 
@@ -29,7 +31,10 @@ public:
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Spectating")
-	TSubclassOf<AActor> BlueprintClass;
+	TSubclassOf<AActor> BPTarget;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Spectating")
+	TSubclassOf<AActor> BPObjective;
 
 	/*UPROPERTY(EditDefaultsOnly, Category = "Spectator")
 	TSubclassOf<ATargetPoint> Location;*/
