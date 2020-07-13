@@ -8,7 +8,7 @@
 #include "Net/UnrealNetwork.h"  // contains DOREPLIFETIME macro
 #include "Engine.h"
 
-#include "FPSGameMode.h"
+#include "../Game/FPSInGameMode.h"
 #include "../Public/FPSCharacter.h"
 
 
@@ -65,7 +65,7 @@ void AFPSAIGuard::Tick(float DeltaTime)
 	// Patrol Goal Check
 	if (CurrentPatrolPoint)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tick PatrolPoint_1"));
+		//UE_LOG(LogTemp, Warning, TEXT("Tick PatrolPoint_1"));
 		FVector Delta = GetActorLocation() - CurrentPatrolPoint->GetActorLocation();
 		float DistanceToGoal = Delta.Size();
 
@@ -75,12 +75,12 @@ void AFPSAIGuard::Tick(float DeltaTime)
 			GetWorldTimerManager().ClearTimer(TimerHandle_ResetOrientation);
 			GetWorldTimerManager().SetTimer(TimerHandle_ResetOrientation, this, &AFPSAIGuard::MoveNextPatrolPoint, 3.0f);
 			bCanTick = false;
-			UE_LOG(LogTemp, Warning, TEXT("Tick PatrolPoint"));
+			//UE_LOG(LogTemp, Warning, TEXT("Tick PatrolPoint"));
 		}
 	}
 
 	DrawDebugString(GetWorld(), FVector(0, 0, 100.f), GetEnumText(Role), this, FColor::Green, DeltaTime);
-
+	//UE_LOG(LogTemp, Warning, TEXT("Guard Tick"));
 }
 
 
@@ -121,11 +121,11 @@ void AFPSAIGuard::OnPawnSeen(APawn * SeenPawn)
 	auto Gualty = Cast<AFPSCharacter>(SeenPawn);
 	if (!Gualty)
 		return;
-	//UE_LOG(LogTemp, Warning, TEXT("SeenPawn"));
+	UE_LOG(LogTemp, Warning, TEXT("SeenPawn"));
 	
 	DrawDebugSphere(GetWorld(), SeenPawn->GetActorLocation(), 40.f, 10.f, FColor::Yellow, false, 10.f);
 
-	AFPSGameMode* GM = Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode());
+	AFPSInGameMode* GM = Cast<AFPSInGameMode>(GetWorld()->GetAuthGameMode());
 	if (GM && Gualty->bGuardSeen)
 	{
 
@@ -133,7 +133,7 @@ void AFPSAIGuard::OnPawnSeen(APawn * SeenPawn)
 		if (Gualty->bIsCarryingObjective)
 			Gualty->bReturnObjective = true;
 		GM->MissionFaild(SeenPawn);
-		
+		UE_LOG(LogTemp, Warning, TEXT("SeenPawn GM"));
 	}
 
 	
@@ -144,6 +144,9 @@ void AFPSAIGuard::OnPawnSeen(APawn * SeenPawn)
 	NewLookAt.Roll = 0.f;
 
 	SetActorRotation(NewLookAt);
+
+	GetWorldTimerManager().ClearTimer(TimerHandle_ResetOrientation);
+	GetWorldTimerManager().SetTimer(TimerHandle_ResetOrientation, this, &AFPSAIGuard::ResetOrientation, 3.0f);
 
 	SetAIState(EAIState::Alert);
 
@@ -159,7 +162,7 @@ void AFPSAIGuard::OnPawnHearing(APawn* NoiseInstigator, const FVector & Location
 		return;
 
 
-	UE_LOG(LogTemp, Warning, TEXT("Hearing Perception"));
+	//UE_LOG(LogTemp, Warning, TEXT("Hearing Perception"));
 	DrawDebugSphere(GetWorld(), Location, 40.f, 10.f, FColor::Green, false, 10.f);
 
 	FVector Direction = Location - GetActorLocation();
@@ -174,7 +177,7 @@ void AFPSAIGuard::OnPawnHearing(APawn* NoiseInstigator, const FVector & Location
 	GetWorldTimerManager().ClearTimer(TimerHandle_ResetOrientation);
 	GetWorldTimerManager().SetTimer(TimerHandle_ResetOrientation, this, &AFPSAIGuard::ResetOrientation, 3.0f);
 
-	UE_LOG(LogTemp, Error, TEXT("Hearing Perception_2"));
+	//UE_LOG(LogTemp, Error, TEXT("Hearing Perception_2"));
 
 	SetAIState(EAIState::Suspisious);
 
@@ -190,8 +193,8 @@ void AFPSAIGuard::OnPawnHearing(APawn* NoiseInstigator, const FVector & Location
 void AFPSAIGuard::ResetOrientation()
 {
 	UE_LOG(LogTemp, Warning, TEXT("ResetOrinetaion"));
-	if (GuardState == EAIState::Alert)
-		return;
+	/*if (GuardState == EAIState::Alert)
+		return;*/
 
 	SetActorRotation(OriginalRotation);
 	SetAIState(EAIState::Idle);

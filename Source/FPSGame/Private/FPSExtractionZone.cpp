@@ -8,7 +8,7 @@
 
 #include "FPSCharacter.h"
 #include "FPSPlayerController.h"
-#include "FPSGameMode.h"
+#include "../Game/FPSInGameMode.h"
 
 
 // Sets default values
@@ -69,7 +69,7 @@ void AFPSExtractionZone::HandleOverlap(UPrimitiveComponent * OverlappedComponent
 		/// this is meaningful only MultiPlayer Game. In MultiPlayer Game this function Executed only Server
 		/// for Client GetAuthGameMode() = NULL
 		UE_LOG(LogTemp, Warning, TEXT("Extraction CarryingObjective Area Zone Player name = %s,  CarryingObjective = %i"), *PlayerPawn->GetName(), PlayerPawn->bIsCarryingObjective)
-		AFPSGameMode* GM = Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode());
+		AFPSInGameMode* GM = Cast<AFPSInGameMode>(GetWorld()->GetAuthGameMode());
 		if (GM)
 		{
 			
@@ -90,6 +90,7 @@ void AFPSExtractionZone::HandleOverlap(UPrimitiveComponent * OverlappedComponent
 			}
 		}*/
 		
+		UE_LOG(LogTemp, Warning, TEXT("ExtractionZone After CompletMission"));
 		
 	}
 	else
@@ -107,6 +108,7 @@ void AFPSExtractionZone::HandleOverlap(UPrimitiveComponent * OverlappedComponent
 
 
 }
+
 
 // Called when the game starts or when spawned
 void AFPSExtractionZone::BeginPlay()

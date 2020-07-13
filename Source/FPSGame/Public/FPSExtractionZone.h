@@ -26,6 +26,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Sounds")
 	USoundBase* ObjectiveMissingSOund;
 
+	
+
 protected:
 
 	UFUNCTION()
