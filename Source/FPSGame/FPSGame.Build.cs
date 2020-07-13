@@ -9,6 +9,6 @@ public class FPSGame : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
         // We add here "AIModule" for AI because it is in a separate module in Engine
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AIModule" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AIModule", "UMG", "OnlineSubsystem", "OnlineSubsystemSteam" });
 	}
 }
