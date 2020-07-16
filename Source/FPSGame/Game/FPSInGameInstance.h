@@ -7,6 +7,8 @@
 #include "FPSInGameInstance.generated.h"
 
 class AFPSPlayerState;
+class AFPSInGameMode;
+class AFPSGameObject;
 
 /**
  * 
@@ -19,17 +21,22 @@ class FPSGAME_API UFPSInGameInstance : public UFPSGameInstance
 	
 public:
 
-	// Clients who are actually in game (not spectators or whatever)
-	UPROPERTY(BlueprintReadOnly)
-	TArray<AFPSPlayerState*> Players;
+	UFPSInGameInstance();
+
+	UPROPERTY()
+	AFPSGameObject* Game;
+
+	// Used to store the unreal game reference during travel
+	UFUNCTION(BlueprintCallable, Category = "UnrealGames")
+	void StoreUGGame(/*AFPSGameObject* _Game*/);
 
 	int32 PlayerNumber;
 
-public:
-	
-	UFUNCTION(BlueprintCallable, Category = "InGameInstance")
-	void NewPlayer(AFPSPlayerState* Player);
+	/** Call to create the game mode for a given map URL */
+	virtual class AGameModeBase* CreateGameModeForURL(FURL InURL) override;
 
-	void UpdatePlayers(AFPSPlayerState* OldPS, AFPSPlayerState* NewPS);
-	
+	UPROPERTY(BlueprintReadWrite)
+	AFPSPlayerState* TestPlayerState;
+
+
 };

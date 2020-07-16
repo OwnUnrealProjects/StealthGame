@@ -6,6 +6,8 @@
 #include "GameFramework/GameState.h"
 #include "FPSInGameState.generated.h"
 
+class AFPSGameObject;
+
 /**
  * 
  */
@@ -29,6 +31,19 @@ public:
 
 	void SetPlayerNumbers(int32 PlayerNum) { PlayerNumber = PlayerNum; }
 
+
+	UPROPERTY(ReplicatedUsing = OnRep_Game)
+	class AFPSGameObject* Game;
+	UFUNCTION(BlueprintImplementableEvent, Category = "UnrealGames")
+	void OnRep_Game();
+
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "UnrealGames")
+	class AFPSGameObject* GetGame();
+
+public:
+
+	void SetGame(AFPSGameObject* Game);
 
 
 private:

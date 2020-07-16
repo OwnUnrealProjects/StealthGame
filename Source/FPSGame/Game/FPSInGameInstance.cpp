@@ -1,33 +1,32 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FPSInGameInstance.h"
+#include "FPSInGameMode.h"
+#include "FPSGameObject.h"
+#include "../DebugTool/DebugLog.h"
 
 
-
-
-void UFPSInGameInstance::NewPlayer(AFPSPlayerState* Player)
+UFPSInGameInstance::UFPSInGameInstance()
 {
-	Players.AddUnique(Player);	
+	Game = CreateDefaultSubobject<AFPSGameObject>(TEXT("GameObject"));
 }
 
-void UFPSInGameInstance::UpdatePlayers(AFPSPlayerState* OldPS, AFPSPlayerState* NewPS)
+void UFPSInGameInstance::StoreUGGame(/*AFPSGameObject* _Game*/)
 {
-	if (OldPS == nullptr || NewPS == nullptr)
-	{
-		//UE_LOG(LogTemp, Warning, TEXT("UGGame::UpdatePlayerState: Invalid argument."));
-		return;
-	}
+	//Game = _Game;
 
-	int32 i = Players.Find(OldPS);
-	if (i != INDEX_NONE)
-	{
-		Players.Remove(OldPS);
-	}
-	else
-	{
-		//UE_LOG(LogTemp, Warning, TEXT("UGGame::UpdatePlayerState: OldPS (%s) is not in game."), *GetNameSafe(OldPS));
-		return;
-	}
+	auto World = GetWorld();
+	if (!IsValid(World)) return;
+	auto GM = Cast<AFPSInGameMode>(World->GetAuthGameMode());
+	if (!IsValid(GM)) return;
+	GM->SetGame(Game);
+	TestPlayerState;
+	LOG_S("   ")
+}
 
-	Players.Add(NewPS);
+AGameModeBase* UFPSInGameInstance::CreateGameModeForURL(FURL InURL)
+{
+	AGameModeBase * DefaultGameMode = Super::CreateGameModeForURL(InURL);
+
+	return DefaultGameMode;
 }

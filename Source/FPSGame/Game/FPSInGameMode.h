@@ -8,6 +8,7 @@
 
 class ATargetPoint;
 class UUILobby;
+class AFPSGameObject;
 
 /**
  * 
@@ -32,10 +33,22 @@ public:
 	void TraveNewMap(/*FString URL*/);
 
 	UFUNCTION(BlueprintCallable, Category = "Widget")
-		void ConnectLobbyWidget(UUILobby* Lobby);
+	void ConnectLobbyWidget(UUILobby* Lobby);
 
 	UFUNCTION(BlueprintCallable, Category = "Player PostLogin")
-		int32 GetPlayerNumber() { return NumberofPlayers; }
+	int32 GetPlayerNumber() { return NumberofPlayers; }
+
+
+public:
+
+	void SetGame(AFPSGameObject* Game);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "UnrealGames")
+	AFPSGameObject* GetGame();
+
+	TSubclassOf<APlayerState> GetPlayerStateClass();
+
+	FString TestGameModeName = "None";
 
 public:
 
@@ -47,10 +60,10 @@ protected:
 
 	/* Camera Target */
 	UPROPERTY(EditDefaultsOnly, Category = "Spectating")
-		TSubclassOf<AActor> BPTarget;
+	TSubclassOf<AActor> BPTarget;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Spectating")
-		TSubclassOf<AActor> BPObjective;
+	TSubclassOf<AActor> BPObjective;
 
 	/*UPROPERTY(EditDefaultsOnly, Category = "Spectator")
 	TSubclassOf<ATargetPoint> Location;*/
@@ -58,6 +71,7 @@ protected:
 private:
 
 	class AFPSInGameState* GS;
+	class UFPSInGameInstance* GI;
 
 	AActor* NewViewTarget;
 	//ATargetPoint* CameraLocation;

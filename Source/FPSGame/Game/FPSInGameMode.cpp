@@ -6,17 +6,21 @@
 #include "UObject/ConstructorHelpers.h"
 #include "FPSInGameState.h"
 #include "FPSObjectiveActor.h"
-
 #include "FPSPlayerController.h"
+#include "FPSInGameInstance.h"
+#include "FPSPlayerController.h"
+#include "FPSGameObject.h"
+#include "../UI/UILobby.h"
+//#include "../MenuSystem/FPSGameInstance.h"
+#include "../Public/FPSPlayerState.h"
+#include "../DebugTool/DebugLog.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/TargetPoint.h"
-#include "FPSPlayerController.h"
-#include "../UI/UILobby.h"
-#include "../MenuSystem/FPSGameInstance.h"
-#include "FPSPlayerState.h"
-#include "../Game/FPSInGameInstance.h"
-#include "../DebugTool/DebugLog.h"
+
+
+
 
 
 AFPSInGameMode::AFPSInGameMode()
@@ -30,6 +34,16 @@ AFPSInGameMode::AFPSInGameMode()
 	GameStateClass = AFPSInGameState::StaticClass();
 	PlayerStateClass = AFPSPlayerState::StaticClass();
 	PlayerControllerClass = AFPSPlayerController::StaticClass();
+	//bUseSeamlessTravel = true;
+
+	auto World = GetWorld();
+	if(!World) return;
+
+	UFPSInGameInstance* GI = Cast<UFPSInGameInstance>(World->GetGameInstance());
+	if (GI)
+	{
+		GI->StoreUGGame();
+	}
 }
 
 
@@ -41,13 +55,16 @@ void AFPSInGameMode::BeginPlay()
 	UE_LOG(LogTemp, Warning, TEXT("GameMode BeginPlay Set GS"));
 
 	GS = GetGameState<AFPSInGameState>();
-
 	GS->SetPlayerNumbers(NumberofPlayers);
 
 
 }
 
 
+TSubclassOf<APlayerState> AFPSInGameMode::GetPlayerStateClass()
+{
+	return PlayerStateClass;
+}
 
 void AFPSInGameMode::CompleteMission()
 {
@@ -137,39 +154,16 @@ void AFPSInGameMode::MissionFaild(APawn * SeenPawn)
 
 
 /// Level Load
-
 void AFPSInGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	//++NumberofPlayers;
-	//if (GS)
-	//{
-	//	GS->SetPlayerNumbers(NumberofPlayers);
-	//	UE_LOG(LogTemp, Warning, TEXT("GS is not NULL"));
-	//}
-	//else
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("GS is NULL"));
-	//}
-	//	
-
-	//UE_LOG(LogTemp, Warning, TEXT("PostLogin NumberPlayers = %i"), NumberofPlayers);
-	//FString NumberString = FString::FromInt(NumberofPlayers);
-	//FText NumberText = FText::FromString(NumberString);
-	////UILobby->PlayerNumber->SetText(NumberText);
-
-	//if (NumberofPlayers >= 2)
-	//{
-	//	GetWorldTimerManager().SetTimer(TimerHandle_StartGame, this, &AFPSInGameMode::StartGame, 10.f);
-	//}
-
 	AFPSPlayerState* PS = Cast<AFPSPlayerState>(NewPlayer->PlayerState);
-	UFPSInGameInstance* GI = Cast<UFPSInGameInstance>(GetGameInstance());
-	if (PS && GI)
+
+	auto Game = GetGame();
+	if (PS && Game)
 	{
-		GI->NewPlayer(PS);
-		GI->PlayerNumber++;
+		Game->NewPlayer(PS);
 	}
 
 }
@@ -209,3 +203,26 @@ void AFPSInGameMode::TraveNewMap(/*FString URL*/)
 }
 
 
+void AFPSInGameMode::SetGame(AFPSGameObject* _Game)
+{
+	auto gs = Cast<AFPSInGameState>(GameState);
+	if (IsValid(gs))
+	{
+		gs->SetGame(_Game);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("GameMode::Cannot set Game: GameState is invalid!"));
+	}
+}
+
+
+AFPSGameObject* AFPSInGameMode::GetGame()
+{
+	auto gs = Cast<AFPSInGameState>(GameState);
+	if (IsValid(gs))
+	{
+		return gs->GetGame();
+	}
+	return nullptr;
+}

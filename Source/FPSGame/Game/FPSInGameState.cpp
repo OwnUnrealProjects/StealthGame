@@ -3,7 +3,12 @@
 #include "FPSInGameState.h"
 #include "../Public/FPSCharacter.h"
 #include "../public/FPSPlayerController.h"
+#include "FPSInGameMode.h"
+#include "FPSGameObject.h"
+#include "FPSInGameInstance.h"
 #include "../DebugTool/DebugLog.h"
+
+#include "Net/UnrealNetwork.h"
 
 
 
@@ -11,6 +16,7 @@ void AFPSInGameState::BeginPlay()
 {
 	Super::BeginPlay();
 	LOG_S(FString(" GameState"));
+
 }
 
 
@@ -77,6 +83,32 @@ void AFPSInGameState::MissionFailed_Implementation(AActor * CameraNewTarget, APa
 
 }
 
+class AFPSGameObject* AFPSInGameState::GetGame()
+{
+	if (!IsValid(Game) && Role == ROLE_Authority)
+	{
+		auto GI = Cast<UFPSInGameInstance>(GetGameInstance());
+
+		if (IsValid(GI)) Game = GI->Game;
+	}
+
+	return Game;
+}
+
+void AFPSInGameState::SetGame(AFPSGameObject* _Game)
+{
+	Game = _Game;
+
+	if (IsValid(Game))
+	{
+		auto gm = GetWorld() ? Cast<AFPSInGameMode>(GetWorld()->GetAuthGameMode()) : nullptr;
+		if (gm)
+		{
+			gm->PlayerStateClass = Game->PlayerStateClass;
+		}
+	}
+}
+
 void AFPSInGameState::UnPossessedPawn(AFPSPlayerController *PC)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Timer"));
@@ -86,3 +118,9 @@ void AFPSInGameState::UnPossessedPawn(AFPSPlayerController *PC)
 
 
 
+void AFPSInGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AFPSInGameState, Game);
+}
