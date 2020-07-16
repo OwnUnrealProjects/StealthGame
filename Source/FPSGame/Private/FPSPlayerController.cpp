@@ -8,7 +8,7 @@
 
 AFPSPlayerController::AFPSPlayerController()
 {
-
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 
@@ -16,6 +16,21 @@ void AFPSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	//OwnerPlayerRole = GetPawn()->Role;
+
+	/*FString Name;
+	GetName(Name);
+	LOG_S(FString::Printf(TEXT("Own Name = %s   PlayerState PlayerName = %s"), *Name, *PlayerState->GetPlayerName()));*/
+
+	
+}
+
+void AFPSPlayerController::Tick(float DeltaSeconds)
+{
+	FString Name;
+	GetName(Name);
+	LOG_S(FString::Printf(TEXT("Own Name = %s   PlayerState PlayerName = %s"), *Name, *PlayerState->GetPlayerName()));
+
+	LOG_I(PlayerState->Score);
 }
 
 void AFPSPlayerController::Possess(APawn* aPawn)
@@ -36,6 +51,9 @@ void AFPSPlayerController::InitPlayerState()
 	{
 		UWorld* const World = GetWorld();
 		AFPSInGameMode* const GameMode = World ? Cast<AFPSInGameMode>(World->GetAuthGameMode()) : NULL;
+		//LOG_S(FString::Printf(TEXT("GameMode Name = %s"), *GameMode->TestGameModeName));  // Crash the Editor
+		//GameMode->TestGameModeName = "GM";
+		//LOG_S(FString::Printf(TEXT("GameMode Name = %s"), *GameMode->TestGameModeName));
 		if (GameMode != NULL)
 		{
 			FActorSpawnParameters SpawnInfo;
@@ -43,7 +61,8 @@ void AFPSPlayerController::InitPlayerState()
 			SpawnInfo.Instigator = Instigator;
 			SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 			SpawnInfo.ObjectFlags |= RF_Transient;	// We never want player states to save into a map
-			PlayerState = World->SpawnActor<APlayerState>(GameMode->PlayerStateClass, SpawnInfo);
+			PlayerState = World->SpawnActor<APlayerState>(GameMode->GetPlayerStateClass(), SpawnInfo);
+			
 
 			// force a default player name if necessary
 			if (PlayerState && PlayerState->GetPlayerName().IsEmpty())

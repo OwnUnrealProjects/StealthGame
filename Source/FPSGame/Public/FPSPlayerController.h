@@ -20,6 +20,8 @@ public:
 
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaSeconds) override;
+
 	virtual void Possess(APawn* aPawn) override;
 
 	/* this funtion is called in APlayerController::PostInitializedComponents */

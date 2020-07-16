@@ -3,6 +3,7 @@
 #include "FPSPlayerState.h"
 #include "../Game/FPSInGameInstance.h"
 #include "../DebugTool/DebugLog.h"
+#include "../Game/FPSGameObject.h"
 
 
 
@@ -17,7 +18,7 @@ void AFPSPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
 
-	LOG_S(GetPlayerName());
+	LOG_S(FString::Printf(TEXT("PlayerName = %s"), *GetPlayerName()));
 }
 
 void AFPSPlayerState::CopyProperties(APlayerState* PlayerState)
@@ -25,10 +26,18 @@ void AFPSPlayerState::CopyProperties(APlayerState* PlayerState)
 	Super::CopyProperties(PlayerState);
 	
 	AFPSPlayerState* PS = Cast<AFPSPlayerState>(PlayerState);
-	PS->SetPlayerNameInternal(this->GetPlayerName());
 
 	UFPSInGameInstance* GI = Cast<UFPSInGameInstance>(GetGameInstance());
-	if(GI)
-		GI->UpdatePlayers(this, PS);
+	if (GI)
+	{
+		GI->Game->UpdatePlayers(this, PS);
+		GI->TestPlayerState = PS;
+		LOG_S(FString::Printf(TEXT("TestPlayerState Name = %s"), *GI->TestPlayerState->GetPlayerName()));
+		LOG_S(this->GetPlayerName());
+		LOG_S(PlayerState->GetPlayerName());
+
+	}
+
+	
 
 }

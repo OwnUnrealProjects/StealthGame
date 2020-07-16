@@ -34,6 +34,7 @@ void UHostMenu::HostServer()
 
 	AFPSPlayerController* PC = Cast<AFPSPlayerController>(GetOwningPlayer());
 	PC->PlayerState->SetPlayerNameInternal(PlayerName->GetText().ToString());
+	PC->PlayerState->Score = 5;
 	LOG_S(PC->PlayerState->PlayerName);
 	
 	if (GameInstance)
