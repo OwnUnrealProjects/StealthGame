@@ -8,7 +8,6 @@
 #include "FPSObjectiveActor.h"
 #include "FPSPlayerController.h"
 #include "FPSInGameInstance.h"
-#include "FPSPlayerController.h"
 #include "FPSGameObject.h"
 #include "../UI/UILobby.h"
 //#include "../MenuSystem/FPSGameInstance.h"
@@ -36,14 +35,14 @@ AFPSInGameMode::AFPSInGameMode()
 	PlayerControllerClass = AFPSPlayerController::StaticClass();
 	//bUseSeamlessTravel = true;
 
-	auto World = GetWorld();
+	/*auto World = GetWorld();
 	if(!World) return;
 
 	UFPSInGameInstance* GI = Cast<UFPSInGameInstance>(World->GetGameInstance());
 	if (GI)
 	{
 		GI->StoreUGGame();
-	}
+	}*/
 }
 
 
@@ -57,7 +56,8 @@ void AFPSInGameMode::BeginPlay()
 	GS = GetGameState<AFPSInGameState>();
 	GS->SetPlayerNumbers(NumberofPlayers);
 
-
+	/*if (NumberofPlayers > 0)
+		GetWorldTimerManager().SetTimer(TimerHandle_StartGame, this, &AFPSInGameMode::StartGame, 10.f);*/
 }
 
 
@@ -160,11 +160,14 @@ void AFPSInGameMode::PostLogin(APlayerController* NewPlayer)
 
 	AFPSPlayerState* PS = Cast<AFPSPlayerState>(NewPlayer->PlayerState);
 
-	auto Game = GetGame();
+	++NumberofPlayers;
+
+	/*auto Game = GetGame();
 	if (PS && Game)
 	{
 		Game->NewPlayer(PS);
-	}
+	}*/
+
 
 }
 
@@ -173,6 +176,21 @@ void AFPSInGameMode::ConnectLobbyWidget(UUILobby* Lobby)
 	UILobby = Lobby;
 	UILobby->Start.AddDynamic(this, &AFPSInGameMode::StartGame);
 }
+
+
+
+void AFPSInGameMode::TraveNewMap(/*FString URL*/)
+{
+
+	UWorld* World = GetWorld();
+	if (!ensure(World != nullptr)) return;
+
+	bUseSeamlessTravel = true;
+	World->ServerTravel("/Game/Maps/City?listen");
+
+	LOG_S(FString("TraveNewMap ServerTravel"));
+}
+
 
 void AFPSInGameMode::StartGame()
 {
@@ -190,19 +208,7 @@ void AFPSInGameMode::StartGame()
 }
 
 
-void AFPSInGameMode::TraveNewMap(/*FString URL*/)
-{
-
-	UWorld* World = GetWorld();
-	if (!ensure(World != nullptr)) return;
-
-	bUseSeamlessTravel = true;
-	World->ServerTravel("/Game/Maps/City?listen");
-
-	LOG_S(FString("TraveNewMap ServerTravel"));
-}
-
-
+/// GameObject System
 void AFPSInGameMode::SetGame(AFPSGameObject* _Game)
 {
 	auto gs = Cast<AFPSInGameState>(GameState);

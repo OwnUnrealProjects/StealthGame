@@ -20,6 +20,16 @@ void AFPSInGameState::BeginPlay()
 }
 
 
+//void AFPSInGameState::PostInitializeComponents()
+//{
+//	Super::PostInitializeComponents();
+//
+//	for (TActorIterator<APlayerState> It(World); It; ++It)
+//	{
+//		AddPlayerState(*It);
+//	}
+//}
+
 void AFPSInGameState::MultiCastOnMissionComplite_Implementation(AActor *CameraNewTarget)
 {
 
@@ -83,6 +93,26 @@ void AFPSInGameState::MissionFailed_Implementation(AActor * CameraNewTarget, APa
 
 }
 
+
+
+void AFPSInGameState::UnPossessedPawn(AFPSPlayerController *PC)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Timer"));
+	GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+	PC->UnPossess();
+}
+
+
+
+void AFPSInGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AFPSInGameState, Game);
+}
+
+
+/// GameObject System
 class AFPSGameObject* AFPSInGameState::GetGame()
 {
 	if (!IsValid(Game) && Role == ROLE_Authority)
@@ -107,20 +137,4 @@ void AFPSInGameState::SetGame(AFPSGameObject* _Game)
 			gm->PlayerStateClass = Game->PlayerStateClass;
 		}
 	}
-}
-
-void AFPSInGameState::UnPossessedPawn(AFPSPlayerController *PC)
-{
-	UE_LOG(LogTemp, Warning, TEXT("Timer"));
-	GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
-	PC->UnPossess();
-}
-
-
-
-void AFPSInGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(AFPSInGameState, Game);
 }

@@ -32,10 +32,6 @@ void UHostMenu::HostServer()
 	
 	if(!ReadyToHost()) return;
 
-	AFPSPlayerController* PC = Cast<AFPSPlayerController>(GetOwningPlayer());
-	PC->PlayerState->SetPlayerNameInternal(PlayerName->GetText().ToString());
-	PC->PlayerState->Score = 5;
-	LOG_S(PC->PlayerState->PlayerName);
 	
 	if (GameInstance)
 	{
@@ -49,9 +45,6 @@ void UHostMenu::HostServer()
 		UE_LOG(LogTemp, Warning, TEXT("Host Server GameInstance = NULL"));
 	}
 
-	/*AFPSPlayerController* PC = Cast<AFPSPlayerController>(GetOwningPlayer());
-	PC->PlayerState->SetPlayerNameInternal(PlayerName->GetText().ToString());
-	LOG_S(PC->PlayerState->PlayerName);*/
 	
 }
 

@@ -35,9 +35,6 @@ public:
 
 	FString RoleString();
 
-	void SetPlayerName(FString Name);
-
-
 
 protected:
 

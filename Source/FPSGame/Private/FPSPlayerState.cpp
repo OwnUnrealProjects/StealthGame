@@ -27,7 +27,7 @@ void AFPSPlayerState::CopyProperties(APlayerState* PlayerState)
 	
 	AFPSPlayerState* PS = Cast<AFPSPlayerState>(PlayerState);
 
-	UFPSInGameInstance* GI = Cast<UFPSInGameInstance>(GetGameInstance());
+	/*UFPSInGameInstance* GI = Cast<UFPSInGameInstance>(GetGameInstance());
 	if (GI)
 	{
 		GI->Game->UpdatePlayers(this, PS);
@@ -36,7 +36,7 @@ void AFPSPlayerState::CopyProperties(APlayerState* PlayerState)
 		LOG_S(this->GetPlayerName());
 		LOG_S(PlayerState->GetPlayerName());
 
-	}
+	}*/
 
 	
 

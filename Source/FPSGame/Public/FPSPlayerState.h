@@ -25,7 +25,7 @@ public:
 	virtual void CopyProperties(APlayerState* PlayerState) override;
 
 	UFUNCTION(BlueprintCallable, Category = "FPSPlayerState")
-	void SetOwnerPlayerName(FString name) { OwnerPlayerName = name; }
+	void SetOwnerPlayerName(FString name) { SetPlayerNameInternal(name); OwnerPlayerName = name; }
 
 	UFUNCTION(BlueprintPure, Category = "FPSPlayerState")
 	FString GetOwnerPlayerName() { return OwnerPlayerName; }

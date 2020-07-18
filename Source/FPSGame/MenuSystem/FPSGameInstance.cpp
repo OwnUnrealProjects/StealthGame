@@ -8,6 +8,7 @@
 
 #include "UObject/ConstructorHelpers.h"
 #include "OnlineSubsystem.h"
+#include "OnlineSubsystemTypes.h"
 #include "UnrealNames.h"
 #include "../Public/FPSPlayerController.h"
 
@@ -117,6 +118,13 @@ void UFPSGameInstance::OnCreateSessionComplite(FName SessionName, bool Success)
 	World->ServerTravel("/Game/Maps/Lobby?listen");
 
 	LOG_S(FString("Server is traveled"));
+	LOG_S(SessionName.ToString());
+
+	FString Name;
+	SessionInterface->GetSessionSettings(SessionName)->Get<FString>(SESSION_NAME_SETTINGS_KEY, Name);
+	//EOnlineSessionState ST = SessionInterface->GetSessionState(SessionName);
+	FString SessionState = EOnlineSessionState::ToString(SessionInterface->GetSessionState(SessionName));
+	LOG_S(FString::Printf(TEXT("SessionState = %s, HostName = %s"), *SessionState, *Name));
 }
 
 
@@ -135,7 +143,7 @@ void UFPSGameInstance::RefreshServerList()
 	if (SessionSearch.IsValid())
 	{
 		SessionSearch->MaxSearchResults = 50;
-		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+		SessionSearch->QuerySettings.Set<bool>(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 		int32 Time = int32(GetWorld()->TimeSeconds);
 		LOG_S(FString("Start Find Session"));
 		LOG_I(Time);
@@ -146,9 +154,13 @@ void UFPSGameInstance::RefreshServerList()
 
 void UFPSGameInstance::OnFindSessionComplete(bool Success)
 {
+	
+
+
 	if (Success && SessionSearch.IsValid())
 	{
 		TArray<FServerData> DataServers;
+		LOG_S(FString::Printf(TEXT("SessionSearch Result Num = %i"), SessionSearch->SearchResults.Num()));
 		for (FOnlineSessionSearchResult &SearchResult : SessionSearch->SearchResults)
 		{
 			FServerData DataServer;
@@ -182,7 +194,8 @@ void UFPSGameInstance::OnFindSessionComplete(bool Success)
 
 		if (!ensure(JoinMenuClass != nullptr)) return;
 		JoinMenuClass->SetServerList(DataServers);
-
+		/*if (SessionSearch->SearchResults.Num() != 0)
+			LOG_S(FString::Printf(TEXT("OnFindFunction GetNamedSession = %s"), *SessionInterface->GetNamedSession(SESSION_NAME)->SessionName.ToString()));*/
 	}
 	
 

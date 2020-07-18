@@ -28,9 +28,9 @@ void AFPSPlayerController::Tick(float DeltaSeconds)
 {
 	FString Name;
 	GetName(Name);
-	LOG_S(FString::Printf(TEXT("Own Name = %s   PlayerState PlayerName = %s"), *Name, *PlayerState->GetPlayerName()));
+	//LOG_S(FString::Printf(TEXT("Own Name = %s   PlayerState PlayerName = %s"), *Name, *PlayerState->GetPlayerName()));
 
-	LOG_I(PlayerState->Score);
+	//LOG_I(PlayerState->Score);
 }
 
 void AFPSPlayerController::Possess(APawn* aPawn)
@@ -47,6 +47,9 @@ void AFPSPlayerController::Possess(APawn* aPawn)
 
 void AFPSPlayerController::InitPlayerState()
 {
+
+	//Super::InitPlayerState();
+
 	if (GetNetMode() != NM_Client)
 	{
 		UWorld* const World = GetWorld();
@@ -84,28 +87,6 @@ FString AFPSPlayerController::RoleString()
 	return "None";
 }
 
-void AFPSPlayerController::SetPlayerName(FString Name)
-{
-	AFPSPlayerState* PS = Cast<AFPSPlayerState>(PlayerState);
-	if (PS)
-	{
-		//LOG_S(PS->GetPlayerName());
-		PS->SetOwnerPlayerName(Name);
-		LOG_S(FString("FPSPlayerState is Not NULL"));
-		//LOG_S(PS->GetPlayerName());
-	}
-	else
-	{
-		LOG_S(FString("FPSPlayerState is NULL"));
-	}
-
-	/*AFPSInGameMode* GM = Cast<AFPSInGameMode>(GetWorld()->GetAuthGameMode());
-	GM->ChangeName(this, Name, true);*/
-
-	
-		
-	LOG_S(Name);
-}
 
 void AFPSPlayerController::OnRep_Possess()
 {

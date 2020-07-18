@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "../MenuSystem/FPSInMenuGameMode.h"
 #include "FPSInGameMode.generated.h"
 
 class ATargetPoint;
@@ -14,7 +15,7 @@ class AFPSGameObject;
  * 
  */
 UCLASS()
-class FPSGAME_API AFPSInGameMode : public AGameMode
+class FPSGAME_API AFPSInGameMode : public AFPSInMenuGameMode
 {
 	GENERATED_BODY()
 	
@@ -29,7 +30,9 @@ public:
 
 	void MissionFaild(APawn *SeenPawn);
 
+	UFUNCTION(BlueprintCallable, Category = "FPSInGameMode")
 	void StartGame();
+
 	void TraveNewMap(/*FString URL*/);
 
 	UFUNCTION(BlueprintCallable, Category = "Widget")
@@ -48,7 +51,6 @@ public:
 
 	TSubclassOf<APlayerState> GetPlayerStateClass();
 
-	FString TestGameModeName = "None";
 
 public:
 

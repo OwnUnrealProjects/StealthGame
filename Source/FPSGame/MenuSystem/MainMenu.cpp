@@ -85,7 +85,7 @@ void UMainMenu::OpenJoinMenu()
 		GameInstance->RefreshServerList();
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("OpenJoinMenu"));
+	//UE_LOG(LogTemp, Warning, TEXT("OpenJoinMenu"));
 }
 
 void UMainMenu::QuitGame()
