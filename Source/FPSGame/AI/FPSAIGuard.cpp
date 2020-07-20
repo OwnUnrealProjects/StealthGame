@@ -8,7 +8,8 @@
 #include "Net/UnrealNetwork.h"  // contains DOREPLIFETIME macro
 #include "Engine.h"
 
-#include "../Game/FPSInGameMode.h"
+//#include "../Game/FPSInGameMode.h"
+#include "../Public/FPSGameMode.h"
 #include "../Public/FPSCharacter.h"
 
 
@@ -125,7 +126,7 @@ void AFPSAIGuard::OnPawnSeen(APawn * SeenPawn)
 	
 	DrawDebugSphere(GetWorld(), SeenPawn->GetActorLocation(), 40.f, 10.f, FColor::Yellow, false, 10.f);
 
-	AFPSInGameMode* GM = Cast<AFPSInGameMode>(GetWorld()->GetAuthGameMode());
+	AFPSGameMode* GM = Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode());
 	if (GM && Gualty->bGuardSeen)
 	{
 

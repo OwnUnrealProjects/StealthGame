@@ -27,6 +27,8 @@ void AFPSPlayerState::CopyProperties(APlayerState* PlayerState)
 	
 	AFPSPlayerState* PS = Cast<AFPSPlayerState>(PlayerState);
 
+	LOG_S(FString("CopyProperties Executed"));
+
 	/*UFPSInGameInstance* GI = Cast<UFPSInGameInstance>(GetGameInstance());
 	if (GI)
 	{

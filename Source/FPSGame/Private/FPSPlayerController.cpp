@@ -3,7 +3,8 @@
 #include "FPSPlayerController.h"
 #include "Net/UnrealNetwork.h"
 #include "FPSPlayerState.h"
-#include "../Game/FPSInGameMode.h"
+//#include "../Game/FPSInGameMode.h"
+#include "../Public/FPSGameMode.h"
 #include "../DebugTool/DebugLog.h"
 
 AFPSPlayerController::AFPSPlayerController()
@@ -48,38 +49,38 @@ void AFPSPlayerController::Possess(APawn* aPawn)
 void AFPSPlayerController::InitPlayerState()
 {
 
-	//Super::InitPlayerState();
+	Super::InitPlayerState();
 
-	if (GetNetMode() != NM_Client)
-	{
-		UWorld* const World = GetWorld();
-		AFPSInGameMode* const GameMode = World ? Cast<AFPSInGameMode>(World->GetAuthGameMode()) : NULL;
-		//LOG_S(FString::Printf(TEXT("GameMode Name = %s"), *GameMode->TestGameModeName));  // Crash the Editor
-		//GameMode->TestGameModeName = "GM";
-		//LOG_S(FString::Printf(TEXT("GameMode Name = %s"), *GameMode->TestGameModeName));
-		if (GameMode != NULL)
-		{
-			FActorSpawnParameters SpawnInfo;
-			SpawnInfo.Owner = this;
-			SpawnInfo.Instigator = Instigator;
-			SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			SpawnInfo.ObjectFlags |= RF_Transient;	// We never want player states to save into a map
-			PlayerState = World->SpawnActor<APlayerState>(GameMode->GetPlayerStateClass(), SpawnInfo);
-			
+	//if (GetNetMode() != NM_Client)
+	//{
+	//	UWorld* const World = GetWorld();
+	//	AFPSGameMode* const GameMode = World ? Cast<AFPSGameMode>(World->GetAuthGameMode()) : NULL;
+	//	//LOG_S(FString::Printf(TEXT("GameMode Name = %s"), *GameMode->TestGameModeName));  // Crash the Editor
+	//	//GameMode->TestGameModeName = "GM";
+	//	//LOG_S(FString::Printf(TEXT("GameMode Name = %s"), *GameMode->TestGameModeName));
+	//	if (GameMode != NULL)
+	//	{
+	//		FActorSpawnParameters SpawnInfo;
+	//		SpawnInfo.Owner = this;
+	//		SpawnInfo.Instigator = Instigator;
+	//		SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	//		SpawnInfo.ObjectFlags |= RF_Transient;	// We never want player states to save into a map
+	//		PlayerState = World->SpawnActor<APlayerState>(GameMode->GetPlayerStateClass(), SpawnInfo);
+	//		
 
-			// force a default player name if necessary
-			if (PlayerState && PlayerState->GetPlayerName().IsEmpty())
-			{
-				// don't call SetPlayerName() as that will broadcast entry messages but the GameMode hasn't had a chance
-				// to potentially apply a player/bot name yet
-				PlayerState->GetPlayerName() = GameMode->DefaultPlayerName.ToString();
-			}
-		}
-		else
-		{
-			Super::InitPlayerState();
-		}
-	}
+	//		// force a default player name if necessary
+	//		if (PlayerState && PlayerState->GetPlayerName().IsEmpty())
+	//		{
+	//			// don't call SetPlayerName() as that will broadcast entry messages but the GameMode hasn't had a chance
+	//			// to potentially apply a player/bot name yet
+	//			PlayerState->GetPlayerName() = GameMode->DefaultPlayerName.ToString();
+	//		}
+	//	}
+	//	else
+	//	{
+	//		Super::InitPlayerState();
+	//	}
+	//}
 }
 
 FString AFPSPlayerController::RoleString()

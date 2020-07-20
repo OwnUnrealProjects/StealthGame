@@ -7,7 +7,6 @@
 #include "FPSInGameInstance.generated.h"
 
 class AFPSPlayerState;
-class AFPSInGameMode;
 class AFPSGameObject;
 
 /**

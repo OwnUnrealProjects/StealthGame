@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FPSInGameInstance.h"
-#include "FPSInGameMode.h"
+//#include "FPSInGameMode.h"
+#include "../Public/FPSGameMode.h"
 #include "FPSGameObject.h"
 #include "../DebugTool/DebugLog.h"
 
@@ -17,9 +18,9 @@ void UFPSInGameInstance::StoreUGGame(/*AFPSGameObject* _Game*/)
 
 	auto World = GetWorld();
 	if (!IsValid(World)) return;
-	auto GM = Cast<AFPSInGameMode>(World->GetAuthGameMode());
+	auto GM = Cast<AFPSGameMode>(World->GetAuthGameMode());
 	if (!IsValid(GM)) return;
-	GM->SetGame(Game);
+	//GM->SetGame(Game);
 	TestPlayerState;
 	LOG_S("   ")
 }
