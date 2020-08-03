@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "FPSGameMode.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSavePlayerStatesData);
+
 class ATargetPoint;
 class UUILobby;
 
@@ -35,6 +37,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Player PostLogin")
 	int32 GetPlayerNumber() { return NumberofPlayers; }
+
+	UPROPERTY()
+	FSavePlayerStatesData SavePlayerStatesData;
 
 public:
 
@@ -66,9 +71,9 @@ private:
 	UUILobby* UILobby;
 
 	FTimerHandle TimerHandle_StartGame;
-
 	FTimerHandle TimerHandle_LoadMap;
 
+	
 };
 
 

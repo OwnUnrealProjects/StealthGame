@@ -24,6 +24,7 @@ public:
 
 	virtual void Possess(APawn* aPawn) override;
 
+
 	/* this funtion is called in APlayerController::PostInitializedComponents */
 	virtual void InitPlayerState() override;
 
@@ -34,7 +35,12 @@ public:
 	enum ENetRole GetOwnerCharacterRemotRole() { return OwnerPlayerRemotRole; }
 
 	FString RoleString();
+	
+	UFUNCTION(BlueprintCallable, Category = "Player Name")
+	void SetCharacterName(FString N) { CharacterName = N; }
 
+	UFUNCTION(BlueprintPure, Category = "Player Name")
+	FString GetPlayerName() { return CharacterName ;}
 
 protected:
 
@@ -42,6 +48,9 @@ protected:
 	bool bPossess = false;
 	UFUNCTION()
 	void OnRep_Possess();
+
+	UPROPERTY(Replicated)
+	FString CharacterName;
 
 private:
 

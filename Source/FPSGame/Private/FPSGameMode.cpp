@@ -6,8 +6,9 @@
 #include "UObject/ConstructorHelpers.h"
 #include "FPSGameState.h"
 #include "FPSObjectiveActor.h"
-
 #include "FPSPlayerController.h"
+#include "../Game/FPSGameObject.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/TargetPoint.h"
@@ -44,7 +45,6 @@ void AFPSGameMode::BeginPlay()
 	GS = GetGameState<AFPSGameState>();
 
 	GS->SetPlayerNumbers(NumberofPlayers);
-
 	
 }
 
@@ -136,42 +136,36 @@ void AFPSGameMode::MissionFaild(APawn * SeenPawn)
 }
 
 
-
+/// ===========================================================
 /// Level Load
 
 void AFPSGameMode::PostLogin(APlayerController* NewPlayer)
 {
+
 	Super::PostLogin(NewPlayer);
 
-	//++NumberofPlayers;
-	//if (GS)
-	//{
-	//	GS->SetPlayerNumbers(NumberofPlayers);
-	//	UE_LOG(LogTemp, Warning, TEXT("GS is not NULL"));
-	//}
-	//else
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("GS is NULL"));
-	//}
-	//	
 
-	//UE_LOG(LogTemp, Warning, TEXT("PostLogin NumberPlayers = %i"), NumberofPlayers);
-	//FString NumberString = FString::FromInt(NumberofPlayers);
-	//FText NumberText = FText::FromString(NumberString);
-	////UILobby->PlayerNumber->SetText(NumberText);
+	++NumberofPlayers;
 
-	//if (NumberofPlayers >= 2)
-	//{
-	//	GetWorldTimerManager().SetTimer(TimerHandle_StartGame, this, &AFPSGameMode::StartGame, 10.f);
-	//}
-
-	AFPSPlayerState* PS = Cast<AFPSPlayerState>(NewPlayer->PlayerState);
+	/*AFPSPlayerState* PS = Cast<AFPSPlayerState>(NewPlayer->PlayerState);
 	UFPSInGameInstance* GI = Cast<UFPSInGameInstance>(GetGameInstance());
-	/*if (PS && GI)
+	if (PS && GI)
 	{
-		GI->NewPlayer(PS);
-		GI->PlayerNumber++;
-	}*/
+		if(GI->PlayerNumber == 0) GI->PlayerNumber = NumberofPlayers;
+		if (GI->Game->PlayerStatesData.Num() != 0)
+		{
+			auto ValidKey = GI->Game->PlayerStatesData.Find(PS->PlayerId);
+			if (ValidKey)
+			{
+				FPlayerData PlayerData = GI->Game->PlayerStatesData[PS->PlayerId];
+				PS->SetPlayerName(PlayerData.PlayerPawnName);
+				PS->Score = PlayerData.ScorePawn;
+			}
+	
+		}
+	}
+
+	UE_LOG(LogTemp, Error, TEXT("GameMode PostLogin !!!!!!!!!!!!!!!!!!!!!!"));*/
 
 }
 
@@ -185,6 +179,8 @@ void AFPSGameMode::StartGame()
 {
 	UWorld* World = GetWorld();
 	if (!ensure(World != nullptr)) return;
+
+	//SavePlayerStatesData.Broadcast();
 
 	bUseSeamlessTravel = true;
 	World->ServerTravel("/Game/Maps/FirstPersonExampleMap?listen");

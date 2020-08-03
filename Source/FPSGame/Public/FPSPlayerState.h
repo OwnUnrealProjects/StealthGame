@@ -22,24 +22,33 @@ public:
 
 	virtual void BeginPlay() override;
 
+	void SetPlayerData();
+
 	virtual void CopyProperties(APlayerState* PlayerState) override;
+	virtual void OverrideWith(APlayerState* PlayerState) override;
+
+	virtual void PostInitializeComponents() override;
 
 	UFUNCTION(BlueprintCallable, Category = "FPSPlayerState")
-	void SetOwnerPlayerName(FString name) { SetPlayerNameInternal(name); OwnerPlayerName = name; }
+	void SetOwnerPlayerName(FString name);
 
 	UFUNCTION(BlueprintPure, Category = "FPSPlayerState")
 	FString GetOwnerPlayerName() { return OwnerPlayerName; }
 
 
 	UFUNCTION(BlueprintCallable, Category = "FPSPlayerState")
-	void SetOwnerPlayerScore(int32 ownscore) { PlayerScore = ownscore; }
+	void SetOwnerPlayerScore(int32 ownscore) { Score = ownscore; PlayerScore = ownscore; }
 
 	UFUNCTION(BlueprintPure, Category = "FPSPlayerState")
 	int32 GetOwnerPlayerScore() { return PlayerScore; }
 
-protected:
 
+
+protected:
+	
+	UPROPERTY(BlueprintReadOnly,Replicated, Category = "Player Own Name")
 	FString OwnerPlayerName;
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = "Player Own Name")
 	int32 PlayerScore;
 	
 };

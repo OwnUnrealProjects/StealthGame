@@ -18,7 +18,15 @@ class FPSGAME_API AFPSGameState : public AGameStateBase
 	
 public:
 
+	AFPSGameState();
+
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaTime) override;
+
+	virtual void PostInitializeComponents() override;
+
+	void AddPlayerState(APlayerState* PlayerState);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MultiCastOnMissionComplite(AActor *CameraNewTarget);
@@ -44,5 +52,8 @@ protected:
 
 	UFUNCTION()
 	void UnPossessedPawn(AFPSPlayerController *PC);
+
+	UFUNCTION()
+	void SavePlayerStatesData();
 
 };

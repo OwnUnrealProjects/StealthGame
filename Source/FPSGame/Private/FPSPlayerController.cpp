@@ -5,6 +5,8 @@
 #include "FPSPlayerState.h"
 //#include "../Game/FPSInGameMode.h"
 #include "../Public/FPSGameMode.h"
+#include "../Game/FPSInGameInstance.h"
+#include "../Game/FPSGameObject.h"
 #include "../DebugTool/DebugLog.h"
 
 AFPSPlayerController::AFPSPlayerController()
@@ -17,7 +19,7 @@ void AFPSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	//OwnerPlayerRole = GetPawn()->Role;
-
+	
 	/*FString Name;
 	GetName(Name);
 	LOG_S(FString::Printf(TEXT("Own Name = %s   PlayerState PlayerName = %s"), *Name, *PlayerState->GetPlayerName()));*/
@@ -27,10 +29,18 @@ void AFPSPlayerController::BeginPlay()
 
 void AFPSPlayerController::Tick(float DeltaSeconds)
 {
-	FString Name;
-	GetName(Name);
-	//LOG_S(FString::Printf(TEXT("Own Name = %s   PlayerState PlayerName = %s"), *Name, *PlayerState->GetPlayerName()));
+	
+	Super::Tick(DeltaSeconds);
 
+	FString Name;
+
+	auto PS = Cast<AFPSPlayerState>(PlayerState);
+	if(!PS) return;
+
+
+	//GetName(Name);
+	//LOG_S(FString::Printf(TEXT("Own Name = %s   PlayerState PlayerName = %s, OwnScore = %i"), *PS->GetOwnerPlayerName(), *PS->GetPlayerName(), PS->GetOwnerPlayerScore()));
+	//LOG_S(PlayerState->GetName());
 	//LOG_I(PlayerState->Score);
 }
 
@@ -45,11 +55,27 @@ void AFPSPlayerController::Possess(APawn* aPawn)
 
 
 
-
 void AFPSPlayerController::InitPlayerState()
 {
 
 	Super::InitPlayerState();
+
+	/*auto GI = Cast<UFPSInGameInstance>(GetGameInstance());
+	auto PS = Cast<AFPSPlayerState>(PlayerState);
+	if (GI && PS)
+	{
+		bool validArray = GI->Game->PlayerStatesData.Num() != 0 ? true : false;
+		auto ValidKey = GI->Game->PlayerStatesData.Find(PS->PlayerId);
+
+		if (ValidKey && validArray)
+		{
+			FString name = GI->Game->PlayerStatesData[PS->PlayerId].PlayerPawnName;
+			auto score = GI->Game->PlayerStatesData[PS->PlayerId].ScorePawn;
+			PlayerState->SetPlayerName(name);
+			PlayerState->Score = score;
+		}
+		
+	}*/
 
 	//if (GetNetMode() != NM_Client)
 	//{
@@ -100,4 +126,5 @@ void AFPSPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AFPSPlayerController, bPossess);
+	DOREPLIFETIME(AFPSPlayerController, CharacterName);
 }

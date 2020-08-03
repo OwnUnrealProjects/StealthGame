@@ -22,13 +22,14 @@ public:
 
 	UFPSInGameInstance();
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, Category = "GameObject")
 	AFPSGameObject* Game;
 
 	// Used to store the unreal game reference during travel
 	UFUNCTION(BlueprintCallable, Category = "UnrealGames")
 	void StoreUGGame(/*AFPSGameObject* _Game*/);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "PlayerController")
 	int32 PlayerNumber;
 
 	/** Call to create the game mode for a given map URL */

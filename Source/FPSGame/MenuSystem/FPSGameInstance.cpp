@@ -96,7 +96,7 @@ void UFPSGameInstance::CreateActualSession()
 {
 	if (SessionInterface.IsValid())
 	{
-		SessionSettings.NumPublicConnections = 2;
+		SessionSettings.NumPublicConnections = 3;
 		SessionSettings.bShouldAdvertise = true;
 		SessionSettings.bUsesPresence = true;
 		SessionSettings.Set<FString>(SESSION_NAME_SETTINGS_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);

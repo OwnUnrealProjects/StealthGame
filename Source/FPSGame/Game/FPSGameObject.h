@@ -5,9 +5,21 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "../Public/FPSPlayerState.h"
+#include "FPSCommon.h"
 #include "FPSGameObject.generated.h"
 
-//class AFPSPlayerState;
+USTRUCT(BlueprintType)
+struct FPlayerData
+{
+	GENERATED_USTRUCT_BODY()
+
+	ETypeOfPawn PawnType;
+
+	FString PlayerPawnName;
+
+	int32 ScorePawn;
+
+};
 
 UCLASS()
 class FPSGAME_API AFPSGameObject : public AActor
@@ -17,6 +29,9 @@ class FPSGAME_API AFPSGameObject : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AFPSGameObject();
+
+	UPROPERTY()
+	TMap<int32, FPlayerData> PlayerStatesData;
 
 protected:
 	// Called when the game starts or when spawned
@@ -41,6 +56,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintAuthorityOnly, Category = "UnrealGames")
 	void NewPlayer(AFPSPlayerState* Player);
 
+	//FString TestName;
 
 public:
 

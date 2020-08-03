@@ -32,6 +32,7 @@ void UHostMenu::HostServer()
 	
 	if(!ReadyToHost()) return;
 
+	//GetOwningLocalPlayer()->GetPlayerController(GetWorld())->PlayerState->SetPlayerName(PlayerName->GetText().ToString());
 	
 	if (GameInstance)
 	{

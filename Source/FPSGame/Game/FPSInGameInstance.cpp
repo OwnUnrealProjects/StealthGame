@@ -10,6 +10,7 @@
 UFPSInGameInstance::UFPSInGameInstance()
 {
 	Game = CreateDefaultSubobject<AFPSGameObject>(TEXT("GameObject"));
+
 }
 
 void UFPSInGameInstance::StoreUGGame(/*AFPSGameObject* _Game*/)
@@ -28,6 +29,8 @@ void UFPSInGameInstance::StoreUGGame(/*AFPSGameObject* _Game*/)
 AGameModeBase* UFPSInGameInstance::CreateGameModeForURL(FURL InURL)
 {
 	AGameModeBase * DefaultGameMode = Super::CreateGameModeForURL(InURL);
+
+	//LOG_S(Game->TestName);
 
 	return DefaultGameMode;
 }

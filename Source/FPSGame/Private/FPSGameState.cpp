@@ -3,14 +3,46 @@
 #include "FPSGameState.h"
 #include "FPSPlayerController.h"
 #include "FPSCharacter.h"
+#include "FPSPlayerState.h"
 #include "../DebugTool/DebugLog.h"
+#include "../Game/FPSGameObject.h"
+#include "../Game/FPSInGameInstance.h"
+#include "FPSGameMode.h"
+
+#include "Public/EngineUtils.h"
 
 
+
+
+AFPSGameState::AFPSGameState()
+{
+	//PrimaryActorTick.bCanEverTick = true;
+}
 
 void AFPSGameState::BeginPlay()
 {
 	Super::BeginPlay();
 	LOG_S(FString(" GameState"));
+
+	AFPSGameMode* GM = GetWorld() ? Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode()) : nullptr;
+	if (GM)
+	{
+		GM->SavePlayerStatesData.AddDynamic(this, &AFPSGameState::SavePlayerStatesData);
+	}
+}
+
+
+void AFPSGameState::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (PlayerArray.Num() != 0)
+	{
+		for (int32 i = 0; i < PlayerArray.Num(); i++)
+		{
+			LOG_S(FString(PlayerArray[i]->GetPlayerName()));
+		}
+	}
 }
 
 
@@ -82,4 +114,60 @@ void AFPSGameState::UnPossessedPawn(AFPSPlayerController *PC)
 	UE_LOG(LogTemp, Warning, TEXT("Timer"));
 	GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 	PC->UnPossess();
+}
+
+
+
+/// ===============================================================
+
+void AFPSGameState::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+
+	for (TActorIterator<APlayerState> It(World); It; ++It)
+	{
+		AddPlayerState(*It);
+	}
+
+	/*auto GI = Cast<UFPSInGameInstance>(GetGameInstance());
+	if (GI->Game->PlayerStatesData.Num() != 0)
+	{
+
+		for (int32 i = 0; i < PlayerArray.Num(); i++)
+		{
+			auto ValidID = GI->Game->PlayerStatesData.Find(PlayerArray[i]->PlayerId);
+			if(!ValidID) continue;
+
+			PlayerArray[i]->SetPlayerName(GI->Game->PlayerStatesData[PlayerArray[i]->PlayerId].PlayerPawnName);
+			PlayerArray[i]->Score = GI->Game->PlayerStatesData[PlayerArray[i]->PlayerId].ScorePawn;
+		}
+	}*/
+}
+
+
+void AFPSGameState::AddPlayerState(APlayerState* PlayerState)
+{
+	if (!PlayerState->bIsInactive)
+	{
+		PlayerArray.AddUnique(PlayerState);
+	}
+}
+
+void AFPSGameState::SavePlayerStatesData()
+{
+
+	auto GI = Cast<UFPSInGameInstance>(GetGameInstance());
+	if(!GI) return;
+
+	FPlayerData Data;
+	for (int32 i = 0; i < PlayerArray.Num(); i++)
+	{
+		Data.PlayerPawnName = PlayerArray[i]->GetPlayerName();
+		Data.ScorePawn = PlayerArray[i]->Score;
+		GI->Game->PlayerStatesData.Add(PlayerArray[i]->PlayerId, Data);
+	}
 }

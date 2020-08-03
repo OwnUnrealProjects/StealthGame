@@ -112,7 +112,8 @@ void AFPSCharacter::Tick(float DeltaTime)
 	//UE_LOG(LogTemp, Warning, TEXT("World Name = %s"), *GetWorld()->GetName());
 	//UE_LOG(LogTemp, Warning, TEXT("Character Tick"));
 
-	//DrawDebugString(GetWorld(), FVector(200, 0, 100.f), GetEnumText(Role), this, FColor::Red, DeltaTime);
+	/*DrawDebugString(GetWorld(), FVector(200, 0, 100.f), GetEnumText(Role), this, FColor::Red, DeltaTime);
+	DrawDebugString(GetWorld(), FVector(200, 0, 120.f), GetEnumText(GetRemoteRole()), this, FColor::Red, DeltaTime);*/
 	//DrawDebugString(GetWorld(), FVector(200, 0, 150.f), GetName(), this, FColor::White, DeltaTime);
 	//DrawDebugString(GetWorld(), FVector(200, 0, 200.f), FString::Printf(TEXT("CarryingObjective = %i"), bIsCarryingObjective), this, FColor::Red, DeltaTime);
 
