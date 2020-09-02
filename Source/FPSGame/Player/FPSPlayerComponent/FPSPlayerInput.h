@@ -10,13 +10,14 @@
 
 class UInputComponent;
 class AFPSMannequin;
+class UFPSPlayerAiming;
 
 UENUM()
 enum  class EFireState : uint8
 {
 	None,
-	Aiming,
-	UndoAiming,
+	Aim,
+	UndoAim,
 	Fire
 };
 
@@ -34,15 +35,9 @@ private:
 
 	EFireState FireState;
 
-	UParticleSystemComponent *TraceComp;
+	UFPSPlayerAiming* AimingComponent;
 
-protected:
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Aiming", meta = (ClampMin = 0.f))
-	float BulletSpread;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Aiming")
-	float LineTraceLength = 1000;
 
 public:
 
@@ -63,8 +58,7 @@ private:
 
 	void StartAiming();
 	void UndoAiming();
-	void AimPoint();
-	void PlayAimBeam(FVector TraceEnd);
+	void CanAiming(bool Val);
 
 	void StartFire();
 

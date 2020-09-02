@@ -4,6 +4,7 @@
 #include "FPSPlayerComponent/FPSPlayerInput.h"
 #include "../DebugTool/DebugLog.h"
 #include "FPSPlayerComponent/FPSPlayerInput.h"
+#include "FPSPlayerComponent/FPSPlayerAiming.h"
 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -27,7 +28,7 @@ AFPSMannequin::AFPSMannequin()
 	CameraSeat->RelativeLocation = FVector(0,0, 200.0);*/
 	
 	bMoving = true;
-	AimTraceName = "AimBeamEnd";
+	//AimTraceName = "AimBeamEnd";
 
 	CameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraArm"));
 	CameraArm->SetupAttachment(GetMesh());
@@ -45,7 +46,9 @@ AFPSMannequin::AFPSMannequin()
 	bUseControllerRotationPitch = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
-	MovementInputComponent = CreateDefaultSubobject<UFPSPlayerInput>(TEXT("MovementInputComonent"));
+	MannequinInputComponent = CreateDefaultSubobject<UFPSPlayerInput>(TEXT("MannequinInputComonent"));
+	MannequinAimingComponent = CreateDefaultSubobject<UFPSPlayerAiming>(TEXT("MannequinAimingComonent"));
+
 	bReplicates = true;
 
 }
@@ -68,7 +71,7 @@ bool AFPSMannequin::ServerCrouch_Validate(bool UpdateCrouch)
 	return true;
 }
 
-void AFPSMannequin::Aiming(EFireState State)
+void AFPSMannequin::PlayAimingAnim(EFireState State)
 {
 	
 	if (FireAnimation)
@@ -76,11 +79,11 @@ void AFPSMannequin::Aiming(EFireState State)
 
 		switch (State)
 		{
-		case EFireState::Aiming:
+		case EFireState::Aim:
 			bAiming = true;
 			PlayAnimMontage(FireAnimation, 1.f, "StartThrow");
 			break;
-		case EFireState::UndoAiming:
+		case EFireState::UndoAim:
 			bAiming = false;
 			PlayAnimMontage(FireAnimation, 1.f, "UndoThrow");
 			break;
@@ -133,7 +136,7 @@ void AFPSMannequin::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	if (IsLocallyControlled())
 	{
-		MovementInputComponent->SetupInputComponent(this, PlayerInputComponent);
+		MannequinInputComponent->SetupInputComponent(this, PlayerInputComponent);
 		//LOG_S(FString("SetupInput -- MovementInput..........................."));
 	}
 	

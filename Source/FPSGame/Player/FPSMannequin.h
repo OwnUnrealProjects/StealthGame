@@ -16,6 +16,7 @@ class UAnimSequence;
 class UPawnNoiseEmitterComponent;
 class USpringArmComponent;
 class UFPSPlayerInput;
+class UFPSPlayerAiming;
 class UTexture2D;
 enum  class EFireState : uint8;
 
@@ -73,7 +74,9 @@ protected:
 	UPawnNoiseEmitterComponent* NoiseEmitterComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	UFPSPlayerInput* MovementInputComponent;
+	UFPSPlayerInput* MannequinInputComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+	UFPSPlayerAiming* MannequinAimingComponent;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Feature")
 	FCharcterFeature OwnFeatures;
@@ -98,11 +101,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "CharacterAnim")
 	bool bFire;
 
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aiming")
-	FName AimTraceName;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Aiming")
-	UParticleSystem* AimBeamEffect;
 
 public:
 	
@@ -132,10 +130,8 @@ public:
 	float GetDefalutMaxSpeed() { return DefaultMaxSpeed; }
 	float GetDefaultCrouchSpeed() { return DefaultCrouchSpeed; }
 
-	void Aiming(EFireState State);
+	void PlayAimingAnim(EFireState State);
 
-	FName GetAimTraceName() const { return AimTraceName; }
-	UParticleSystem* GetAimEffect() const { return AimBeamEffect; }
 
 	void Fire();
 

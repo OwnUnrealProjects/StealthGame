@@ -4,34 +4,19 @@
 #include "../FPSMannequin.h"
 #include "../DebugTool/DebugLog.h"
 #include "../../FPSGame.h"
+#include "FPSPlayerAiming.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SceneComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
-/// Particles
-#include "Kismet/GameplayStatics.h"
-#include "Camera/CameraComponent.h"
 #include "Particles/ParticleSystemComponent.h"
-#include "DrawDebugHelpers.h"
 
-#define OUT
-
-
-static int32 DebugFireLocationsDrawing = 0;
-FAutoConsoleVariableRef CVARDebugFireLocationsDrawing(
-	TEXT("COOP.DebugFireLocations"),
-	DebugFireLocationsDrawing,
-	TEXT("Draw Fire start & End Positions"),
-	ECVF_Cheat
-);
 
 // Sets default values for this component's properties
 UFPSPlayerInput::UFPSPlayerInput()
 {
 	SetIsReplicated(true);
 
-	BulletSpread = 2.f;
 }
 
 
@@ -39,6 +24,8 @@ UFPSPlayerInput::UFPSPlayerInput()
 void UFPSPlayerInput::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AimingComponent = GetOwner()->FindComponentByClass<UFPSPlayerAiming>();
 }
 
 
@@ -152,96 +139,43 @@ void UFPSPlayerInput::UnCrouch()
 
 void UFPSPlayerInput::StartAiming()
 {
-	FireState = EFireState::Aiming;
-
-	Player->bUseControllerRotationYaw = true;
-	Player->GetCameraArmComponent()->bUsePawnControlRotation = false;
-	Player->SetPermissionMoving(false);
-	Player->Aiming(FireState);
-	LOG_I(Player->GetPermissionAiming());
-
-	AimPoint();
-
-	FireState = EFireState::UndoAiming;
+	CanAiming(true);
 }
 
 void UFPSPlayerInput::UndoAiming()
 {
 
-	Player->bUseControllerRotationYaw = false;
-	Player->GetCameraArmComponent()->bUsePawnControlRotation = true;
-	Player->SetPermissionMoving(true);
-	Player->Aiming(FireState);
-
-	if(TraceComp)
-		TraceComp->Deactivate();
+	CanAiming(false);
 }
 
-void UFPSPlayerInput::AimPoint()
+void UFPSPlayerInput::CanAiming(bool Val)
 {
-	FVector StartLocation;
-	FRotator StartRotation;
-	auto PlayerCamera = Player->GetCameraComponent();
-
-	StartLocation = PlayerCamera->GetComponentLocation();
-	StartRotation = PlayerCamera->GetComponentRotation();
-	
-
-	FVector ShotDirection = StartRotation.Vector();
-
-	/// Spread Bullet
-	//float HalfRad = FMath::DegreesToRadians(BulletSpread);                   // Get Radian
-	//ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);       // Get Random vector
-
-	FVector EndLocation = StartLocation + (ShotDirection  * LineTraceLength);
-	//LOG_F(EndLocation.Size());
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(Player);
-	//QueryParams.AddIgnoredActor(this);
-	QueryParams.bTraceComplex = true;
-	QueryParams.bReturnPhysicalMaterial = true;
-
-	FVector TraceEndPoint = EndLocation;
-
-
-
-	FHitResult Hit;
-	bool bIsDamage = GetWorld()->LineTraceSingleByChannel(
-		OUT Hit,
-		OUT StartLocation,
-		OUT EndLocation,
-		COLLISION_AIM,
-		QueryParams
-	);
-
-	PlayAimBeam(EndLocation);
-
-	if (DebugFireLocationsDrawing > 0)
+	if (Val)
 	{
-		DrawDebugSphere(GetWorld(), StartLocation, 100, 12, FColor::Yellow, false, 2.f, 0, 1.f);
-		DrawDebugSphere(GetWorld(), EndLocation, 100, 12, FColor::Red, false, 2.f, 0, 3.f);
-	}
+		FireState = EFireState::Aim;
 
+		Player->bUseControllerRotationYaw = true;
+		Player->GetCameraArmComponent()->bUsePawnControlRotation = false;
+		Player->SetPermissionMoving(false);
+		Player->PlayAimingAnim(FireState);
+		LOG_I(Player->GetPermissionAiming());
+
+		AimingComponent->AimPoint();
+
+		FireState = EFireState::UndoAim;
+	}
+	else
+	{
+		Player->bUseControllerRotationYaw = false;
+		Player->GetCameraArmComponent()->bUsePawnControlRotation = true;
+		Player->SetPermissionMoving(true);
+		Player->PlayAimingAnim(FireState);
+
+		if (AimingComponent->GetTraceEffect())
+			AimingComponent->GetTraceEffect()->Deactivate();
+	}
 }
 
-void UFPSPlayerInput::PlayAimBeam(FVector TraceEnd)
-{
-	auto TraceTargetName = Player->GetAimTraceName();
-	auto TraceEffect = Player->GetAimEffect();
-
-
-	if (TraceEffect)
-	{
-		TraceComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TraceEffect, Player->GetActorLocation());
-	
-		if (TraceComp)
-		{
-			TraceComp->SetVectorParameter(TraceTargetName, TraceEnd);
-		}
-	}
-
-}
 
 void UFPSPlayerInput::StartFire()
 {
@@ -255,7 +189,7 @@ void UFPSPlayerInput::StartFire()
 	Player->GetCameraArmComponent()->bUsePawnControlRotation = true;
 	Player->SetPermissionMoving(false);
 
-	if(TraceComp)
-		TraceComp->Deactivate();
+	if (AimingComponent->GetTraceEffect())
+		AimingComponent->GetTraceEffect()->Deactivate();
 }
 
