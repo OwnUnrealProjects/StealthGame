@@ -8,18 +8,18 @@
 #include "FPSCommon.h"
 #include "FPSGameObject.generated.h"
 
-USTRUCT(BlueprintType)
-struct FPlayerData
-{
-	GENERATED_USTRUCT_BODY()
-
-	ETypeOfPawn PawnType;
-
-	FString PlayerPawnName;
-
-	int32 ScorePawn;
-
-};
+//USTRUCT(BlueprintType)
+//struct FPlayerData
+//{
+//	GENERATED_USTRUCT_BODY()
+//
+//	ETypeOfPawn PawnType;
+//
+//	FString PlayerPawnName;
+//
+//	int32 ScorePawn;
+//
+//};
 
 UCLASS()
 class FPSGAME_API AFPSGameObject : public AActor

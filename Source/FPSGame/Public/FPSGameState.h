@@ -26,7 +26,6 @@ public:
 
 	virtual void PostInitializeComponents() override;
 
-	void AddPlayerState(APlayerState* PlayerState);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MultiCastOnMissionComplite(AActor *CameraNewTarget);
@@ -34,10 +33,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MissionFailed(AActor *CameraNewTarget, APawn *InstigatorPawn, bool MissionFail);
 
-	UFUNCTION(BlueprintCallable, Category = "Player Number")
-	int32 GetPlayerNumber()  { return PlayerNumber; }
-
-	void SetPlayerNumbers(int32 PlayerNum) { PlayerNumber = PlayerNum; }
+	
 
 	
 		
@@ -53,7 +49,24 @@ protected:
 	UFUNCTION()
 	void UnPossessedPawn(AFPSPlayerController *PC);
 
+/// Data Travel System
+protected:
+
 	UFUNCTION()
 	void SavePlayerStatesData();
+
+	UFUNCTION(BlueprintCallable, Category = "Player Number")
+	int32 GetPlayerNumber() { return PlayerNumber; }
+
+
+public:
+
+	void AddPlayerState(APlayerState* PlayerState);
+
+	void SetPlayerNumbers(int32 PlayerNum) { PlayerNumber = PlayerNum; }
+
+	UFUNCTION(NetMulticast, Reliable)
+	void SavePlayerData(const TArray<AFPSPlayerController*> &ConnectPC);
+
 
 };

@@ -40,7 +40,7 @@ public:
 	void SetCharacterName(FString N) { CharacterName = N; }
 
 	UFUNCTION(BlueprintPure, Category = "Player Name")
-	FString GetPlayerName() { return CharacterName ;}
+	FString GetPlayerName() { return CharacterName; }
 
 protected:
 

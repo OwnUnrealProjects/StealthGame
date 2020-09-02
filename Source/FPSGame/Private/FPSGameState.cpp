@@ -8,6 +8,7 @@
 #include "../Game/FPSGameObject.h"
 #include "../Game/FPSInGameInstance.h"
 #include "FPSGameMode.h"
+#include "../Game/FPSSaveGame.h"
 
 #include "Public/EngineUtils.h"
 
@@ -25,10 +26,10 @@ void AFPSGameState::BeginPlay()
 	LOG_S(FString(" GameState"));
 
 	AFPSGameMode* GM = GetWorld() ? Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode()) : nullptr;
-	if (GM)
+	/*if (GM)
 	{
 		GM->SavePlayerStatesData.AddDynamic(this, &AFPSGameState::SavePlayerStatesData);
-	}
+	}*/
 }
 
 
@@ -157,6 +158,43 @@ void AFPSGameState::AddPlayerState(APlayerState* PlayerState)
 	}
 }
 
+
+// SaveGame Part
+void AFPSGameState::SavePlayerData_Implementation(const TArray<AFPSPlayerController*> &ConnectPC)
+{
+	UFPSSaveGame* SaveGameInstance = UFPSSaveGame::CreateSaveGameObject();
+	for (AFPSPlayerController* PC : ConnectPC)
+	{
+		if (PC)
+		{
+			FPlayerData Data;
+			AFPSPlayerState* PS = Cast<AFPSPlayerState>(PC->PlayerState);
+			Data.PlayerPawnName = PS->GetOwnerPlayerName();
+			Data.ScorePawn = PS->GetOwnerPlayerScore();
+			SaveGameInstance->PlayerStatesData.Add(PS->PlayerId, Data);
+		}
+
+	}
+
+
+	//for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; It++)
+	//{
+
+	//	AFPSPlayerController* PC = Cast<AFPSPlayerController>(It->Get());
+	//	//if (PC->IsLocalController())
+	////	{
+	//		FPlayerData Data;
+	//		auto PS = Cast<AFPSPlayerState>(PC->PlayerState);
+	//		Data.PlayerPawnName = PS->GetOwnerPlayerName();
+	//		Data.ScorePawn = PS->GetOwnerPlayerScore();
+	//		SaveGameInstance->PlayerStatesData.Add(PS->PlayerId, Data);
+	////	}
+	//}
+
+	UFPSSaveGame::SaveGameObject(SaveGameInstance);
+}
+
+// GameObject part
 void AFPSGameState::SavePlayerStatesData()
 {
 

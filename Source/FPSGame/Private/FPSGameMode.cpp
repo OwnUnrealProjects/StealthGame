@@ -10,7 +10,6 @@
 #include "../Game/FPSGameObject.h"
 
 #include "Kismet/GameplayStatics.h"
-#include "GameFramework/PlayerController.h"
 #include "Engine/TargetPoint.h"
 #include "FPSPlayerController.h"
 #include "../UI/UILobby.h"
@@ -147,6 +146,13 @@ void AFPSGameMode::PostLogin(APlayerController* NewPlayer)
 
 	++NumberofPlayers;
 
+	auto PC = Cast<AFPSPlayerController>(NewPlayer);
+
+	if (PC)
+	{
+		ConnectPlayerControllers.Add(PC);
+	}
+
 	/*AFPSPlayerState* PS = Cast<AFPSPlayerState>(NewPlayer->PlayerState);
 	UFPSInGameInstance* GI = Cast<UFPSInGameInstance>(GetGameInstance());
 	if (PS && GI)
@@ -175,12 +181,18 @@ void AFPSGameMode::ConnectLobbyWidget(UUILobby* Lobby)
 	UILobby->Start.AddDynamic(this, &AFPSGameMode::StartGame);
 }
 
+void AFPSGameMode::SavePlayerData()
+{
+	GS->SavePlayerData(ConnectPlayerControllers);
+}
+
 void AFPSGameMode::StartGame()
 {
 	UWorld* World = GetWorld();
 	if (!ensure(World != nullptr)) return;
 
 	//SavePlayerStatesData.Broadcast();
+	GS->SavePlayerData(ConnectPlayerControllers);
 
 	bUseSeamlessTravel = true;
 	World->ServerTravel("/Game/Maps/FirstPersonExampleMap?listen");

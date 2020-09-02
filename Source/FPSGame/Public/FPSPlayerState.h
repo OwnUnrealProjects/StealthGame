@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "../Game/FPSCommon.h"
 #include "FPSPlayerState.generated.h"
 
 /**
@@ -16,39 +17,37 @@ class FPSGAME_API AFPSPlayerState : public APlayerState
 	
 public:
 
-	//virtual void PostInitializeComponents() override;
-
 	AFPSPlayerState();
 
 	virtual void BeginPlay() override;
 
-	void SetPlayerData();
 
 	virtual void CopyProperties(APlayerState* PlayerState) override;
-	virtual void OverrideWith(APlayerState* PlayerState) override;
 
 	virtual void PostInitializeComponents() override;
 
 	UFUNCTION(BlueprintCallable, Category = "FPSPlayerState")
 	void SetOwnerPlayerName(FString name);
 
+	UFUNCTION(BlueprintCallable, Category = "FPSPlayerState")
+	void SetOwnerPlayerData(FPlayerData Data);
+
 	UFUNCTION(BlueprintPure, Category = "FPSPlayerState")
-	FString GetOwnerPlayerName() { return OwnerPlayerName; }
+	FString GetOwnerPlayerName() { return CurrentPlayerData.PlayerPawnName; }
 
 
 	UFUNCTION(BlueprintCallable, Category = "FPSPlayerState")
-	void SetOwnerPlayerScore(int32 ownscore) { Score = ownscore; PlayerScore = ownscore; }
+	void SetOwnerPlayerScore(int32 ownscore) { CurrentPlayerData.ScorePawn = ownscore; }
 
 	UFUNCTION(BlueprintPure, Category = "FPSPlayerState")
-	int32 GetOwnerPlayerScore() { return PlayerScore; }
+	int32 GetOwnerPlayerScore() { return CurrentPlayerData.ScorePawn; }
 
+	// No more need
+	//void SetPlayerData();
 
-
-protected:
+public:
 	
-	UPROPERTY(BlueprintReadOnly,Replicated, Category = "Player Own Name")
-	FString OwnerPlayerName;
-	UPROPERTY(BlueprintReadOnly, Replicated, Category = "Player Own Name")
-	int32 PlayerScore;
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = "PlayerData")
+	FPlayerData CurrentPlayerData;
 	
 };

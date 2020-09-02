@@ -4,15 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "../LobbySystem/FPSLobbyGameMode.h"
 #include "FPSGameMode.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSavePlayerStatesData);
 
 class ATargetPoint;
 class UUILobby;
+class AFPSPlayerController;
 
 UCLASS()
-class AFPSGameMode : public AGameModeBase
+class AFPSGameMode : public AFPSLobbyGameMode
 {
 	GENERATED_BODY()
 
@@ -27,19 +29,6 @@ public:
 
 	void MissionFaild(APawn *SeenPawn);
 
-	UFUNCTION(BlueprintCallable, Category = "FPSGameMode")
-	void StartGame();
-
-	void TraveNewMap(/*FString URL*/);
-
-	UFUNCTION(BlueprintCallable, Category = "Widget")
-	void ConnectLobbyWidget(UUILobby* Lobby);
-
-	UFUNCTION(BlueprintCallable, Category = "Player PostLogin")
-	int32 GetPlayerNumber() { return NumberofPlayers; }
-
-	UPROPERTY()
-	FSavePlayerStatesData SavePlayerStatesData;
 
 public:
 
@@ -66,12 +55,41 @@ private:
 	AActor* NewViewTarget;
 	//ATargetPoint* CameraLocation;
 
-	int32 NumberofPlayers = 0;
+
+/// Data Travel System
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "FPSGameMode")
+	void StartGame();
+
+	void TraveNewMap(/*FString URL*/);
+
+	UFUNCTION(BlueprintCallable, Category = "Widget")
+	void ConnectLobbyWidget(UUILobby* Lobby);
+
+	UFUNCTION(BlueprintCallable, Category = "Player PostLogin")
+	int32 GetPlayerNumber() { return NumberofPlayers; }
+
+	UPROPERTY()
+	FSavePlayerStatesData SavePlayerStatesData;
+
+protected:
+	
+	void SavePlayerData();
+
+protected:
+
 
 	UUILobby* UILobby;
 
 	FTimerHandle TimerHandle_StartGame;
 	FTimerHandle TimerHandle_LoadMap;
+
+public:
+
+	TArray<AFPSPlayerController*> ConnectPlayerControllers;
+
+	int32 NumberofPlayers = 0;
 
 	
 };

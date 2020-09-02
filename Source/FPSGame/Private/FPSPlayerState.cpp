@@ -13,27 +13,14 @@
 
 AFPSPlayerState::AFPSPlayerState() : APlayerState()
 {
-	//bUseCustomPlayerNames = true;
-	//SetReplicates(true);
-	PrimaryActorTick.bCanEverTick = true;
+	
 }
 
 void AFPSPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//LOG_S(FString::Printf(TEXT("PlayerName = %s"), *GetPlayerName()));
-
-	if (Role == ROLE_Authority)
-	{
-		UE_LOG(LogTemp, Error, TEXT("BeginePlaye Authority !!!!!!!!!!!!!!!!!!!!"));
-	}
-	else if (Role == ROLE_AutonomousProxy)
-	{
-		UE_LOG(LogTemp, Error, TEXT("BeginePlaye AuthonomousProxy !!!!!!!!!!!!!!!!!!!!"));
-	}
-
-	//SetPlayerData();
+	
+	/// This function run only Server
 	
 }
 
@@ -42,8 +29,7 @@ void AFPSPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AFPSPlayerState, OwnerPlayerName);
-	DOREPLIFETIME(AFPSPlayerState, PlayerScore);
+	DOREPLIFETIME(AFPSPlayerState, CurrentPlayerData);
 
 }
 
@@ -55,26 +41,10 @@ void AFPSPlayerState::CopyProperties(APlayerState* PlayerState)
 
 	if (PS)
 	{
-		PS->OwnerPlayerName = this->OwnerPlayerName;
-		PS->PlayerScore = this->PlayerScore;
+		PS->CurrentPlayerData = this->CurrentPlayerData;
 	}
-
-	LOG_S(FString("CopyProperties Executed !!!!!!!!!!"));
-
-	if (GetRemoteRole() == ROLE_AutonomousProxy)
-	{
-		//PS->PlayerName = this->PlayerName;
-		LOG_S(FString("AuthonomousProxy Remote"));
-	}
-
-	if (Role == ROLE_Authority)
-	{
-		LOG_S(FString("Authrity"));
-	}
-	if (Role == ROLE_AutonomousProxy)
-	{
-		LOG_S(FString("AuthonomousProxy"));
-	}
+	
+	/// This function run only Server
 
 
 }
@@ -82,27 +52,18 @@ void AFPSPlayerState::CopyProperties(APlayerState* PlayerState)
 
 void AFPSPlayerState::SetOwnerPlayerName(FString name)
 {
-	SetPlayerName(name);
-	OwnerPlayerName = name;
-	//PlayerName = name;
+	CurrentPlayerData.PlayerPawnName = name;
 }
 
 
 
 
-void AFPSPlayerState::OverrideWith(APlayerState* PlayerState)
+void AFPSPlayerState::SetOwnerPlayerData(FPlayerData Data)
 {
-	Super::OverrideWith(PlayerState);
-
-	AFPSPlayerState* PS = Cast<AFPSPlayerState>(PlayerState);
-
-	if (PS)
-	{
-		OwnerPlayerName = PS->OwnerPlayerName;
-	}
+	CurrentPlayerData.PawnType = Data.PawnType;
+	CurrentPlayerData.PlayerPawnName = Data.PlayerPawnName;
+	SetOwnerPlayerScore(Data.ScorePawn);
 }
-
-
 
 void AFPSPlayerState::PostInitializeComponents()
 {
@@ -121,23 +82,23 @@ void AFPSPlayerState::PostInitializeComponents()
 }
 
 
-
-void AFPSPlayerState::SetPlayerData()
-{
-	if (!GetOwner()) return;
-
-	auto GI = Cast<UFPSInGameInstance>(GetGameInstance());
-	if (GI)
-	{
-		auto ValidID = GI->Game->PlayerStatesData.Find(PlayerId);
-		if (ValidID)
-		{
-			SetPlayerName(GI->Game->PlayerStatesData[PlayerId].PlayerPawnName);
-			Score = GI->Game->PlayerStatesData[PlayerId].ScorePawn;
-		}
-		else
-		{
-			GI->Game->PlayerStatesData.Remove(PlayerId);
-		}
-	}
-}
+/// No more need
+//void AFPSPlayerState::SetPlayerData()
+//{
+//	if (!GetOwner()) return;
+//
+//	auto GI = Cast<UFPSInGameInstance>(GetGameInstance());
+//	if (GI)
+//	{
+//		auto ValidID = GI->Game->PlayerStatesData.Find(PlayerId);
+//		if (ValidID)
+//		{
+//			SetPlayerName(GI->Game->PlayerStatesData[PlayerId].PlayerPawnName);
+//			Score = GI->Game->PlayerStatesData[PlayerId].ScorePawn;
+//		}
+//		else
+//		{
+//			GI->Game->PlayerStatesData.Remove(PlayerId);
+//		}
+//	}
+//}

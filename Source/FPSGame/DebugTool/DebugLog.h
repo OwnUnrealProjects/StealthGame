@@ -11,6 +11,7 @@
 
 #define  LOG_S(x) UE_LOG(LogTemp, Warning, TEXT("[ Function -- %s ]  String = %s"), *FString(__FUNCTION__), *x)
 #define  LOG_I(x) UE_LOG(LogTemp, Warning, TEXT("[ Funtion  -- %s ]  Integer = %i"),*FString(__FUNCTION__), x)
+#define  LOG_F(x) UE_LOG(LogTemp, Warning, TEXT("[ Funtion  -- %s ]  Float = %f"),*FString(__FUNCTION__), x)
 
 #else
 
