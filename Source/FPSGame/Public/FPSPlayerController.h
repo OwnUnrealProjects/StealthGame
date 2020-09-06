@@ -24,6 +24,8 @@ public:
 
 	virtual void Possess(APawn* aPawn) override;
 
+	//virtual void AddPitchInput(float Val) override;
+
 
 	/* this funtion is called in APlayerController::PostInitializedComponents */
 	virtual void InitPlayerState() override;

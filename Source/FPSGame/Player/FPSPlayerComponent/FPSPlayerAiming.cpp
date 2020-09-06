@@ -10,7 +10,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "DrawDebugHelpers.h"
 
-
+//#define LOG_S
 #define OUT
 
 
@@ -51,7 +51,6 @@ void UFPSPlayerAiming::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// ...
 }
 
 void UFPSPlayerAiming::AimPoint()
@@ -92,7 +91,18 @@ void UFPSPlayerAiming::AimPoint()
 		QueryParams
 	);
 
-	PlayAimBeam(EndLocation);
+	if (TraceComp/* && TraceComp->bIsActive*/)
+	{
+		UpdateTraceEffectLocation(EndLocation);
+		//LOG_S(FString("Activeted"));
+	}
+	else
+	{
+		SpawnTraceEffectAtLocation(EndLocation);
+		TraceComp->bIsActive = true;
+		LOG_S(FString("TraceComp is Spawned"));
+	}
+	
 
 	if (DebugFireLocationsDrawing > 0)
 	{
@@ -101,18 +111,34 @@ void UFPSPlayerAiming::AimPoint()
 	}
 }
 
-void UFPSPlayerAiming::PlayAimBeam(FVector TraceEnd)
+void UFPSPlayerAiming::DestroyTraceEffect()
+{
+	/*TraceComp->bIsActive = false;
+	TraceComp->Deactivate();*/
+	TraceComp->DestroyComponent();
+	TraceComp = nullptr;
+}
+
+void UFPSPlayerAiming::SpawnTraceEffectAtLocation(FVector TraceEnd)
 {
 
 
 	if (AimBeamEffect)
 	{
 		TraceComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), AimBeamEffect, Player->GetActorLocation());
-
+	
 		if (TraceComp)
 		{
 			TraceComp->SetVectorParameter(AimTraceName, TraceEnd);
 		}
+	}
+}
+
+void UFPSPlayerAiming::UpdateTraceEffectLocation(FVector TraceEnd)
+{
+	if (TraceComp)
+	{
+		TraceComp->SetVectorParameter(AimTraceName, TraceEnd);
 	}
 }
 

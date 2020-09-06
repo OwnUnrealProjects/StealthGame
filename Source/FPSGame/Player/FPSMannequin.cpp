@@ -46,8 +46,8 @@ AFPSMannequin::AFPSMannequin()
 	bUseControllerRotationPitch = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
-	MannequinInputComponent = CreateDefaultSubobject<UFPSPlayerInput>(TEXT("MannequinInputComonent"));
 	MannequinAimingComponent = CreateDefaultSubobject<UFPSPlayerAiming>(TEXT("MannequinAimingComonent"));
+	MannequinInputComponent = CreateDefaultSubobject<UFPSPlayerInput>(TEXT("MannequinInputComonent"));
 
 	bReplicates = true;
 
@@ -71,7 +71,7 @@ bool AFPSMannequin::ServerCrouch_Validate(bool UpdateCrouch)
 	return true;
 }
 
-void AFPSMannequin::PlayAimingAnim(EFireState State)
+void AFPSMannequin::PlayFightAnim(EFightState State)
 {
 	
 	if (FireAnimation)
@@ -79,16 +79,18 @@ void AFPSMannequin::PlayAimingAnim(EFireState State)
 
 		switch (State)
 		{
-		case EFireState::Aim:
+		case EFightState::Aim:
 			bAiming = true;
 			PlayAnimMontage(FireAnimation, 1.f, "StartThrow");
 			break;
-		case EFireState::UndoAim:
+		case EFightState::UndoAim:
 			bAiming = false;
 			PlayAnimMontage(FireAnimation, 1.f, "UndoThrow");
 			break;
-		case EFireState::Fire:
-		case EFireState::None:
+		case EFightState::Fire:
+			PlayAnimMontage(FireAnimation, 1.f, "Throw");
+			break;
+		case EFightState::None:
 			break;
 		default:
 			break;
@@ -136,7 +138,7 @@ void AFPSMannequin::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	if (IsLocallyControlled())
 	{
-		MannequinInputComponent->SetupInputComponent(this, PlayerInputComponent);
+		MannequinInputComponent->SetupInputComponent(PlayerInputComponent);
 		//LOG_S(FString("SetupInput -- MovementInput..........................."));
 	}
 	

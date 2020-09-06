@@ -15,6 +15,10 @@
 // Sets default values for this component's properties
 UFPSPlayerInput::UFPSPlayerInput()
 {
+	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
+	// off to improve performance if you don't need them.
+	PrimaryComponentTick.bCanEverTick = true;
+	
 	SetIsReplicated(true);
 
 }
@@ -24,27 +28,50 @@ UFPSPlayerInput::UFPSPlayerInput()
 void UFPSPlayerInput::BeginPlay()
 {
 	Super::BeginPlay();
-
+	Player = Cast<AFPSMannequin>(GetOwner());
 	AimingComponent = GetOwner()->FindComponentByClass<UFPSPlayerAiming>();
 }
 
 
-void UFPSPlayerInput::SetupInputComponent(AFPSMannequin* OwnerPlayer, UInputComponent* Input)
+
+
+void UFPSPlayerInput::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Player = OwnerPlayer;
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	//LOG_S(FString("Input TickComponent"));
+
+	switch (FightState)
+	{
+	case EFightState::Aim:
+		//LOG_S(FString("AimingState"));
+		AimingComponent->AimPoint();
+		break;
+	case  EFightState::None:
+		//LOG_S(FString("NonAimState"));
+		break;
+	default:
+		break;
+	}
+
+}
+
+void UFPSPlayerInput::SetupInputComponent(UInputComponent* Input)
+{
+	
 	InputComponentt = Input;
 	if (InputComponentt)
 	{
 		/// Bind Input axis
-		InputComponentt->BindAxis("Turn", this, &UFPSPlayerInput::Azimuth);
-		InputComponentt->BindAxis("LookUp", this, &UFPSPlayerInput::Elevation);
-		InputComponentt->BindAxis("MoveForward", this, &UFPSPlayerInput::MoveForward);
-		InputComponentt->BindAxis("MoveRight", this, &UFPSPlayerInput::MoveRight);
-		InputComponentt->BindAction("Crouch", IE_Pressed, this, &UFPSPlayerInput::Crouch);
-		InputComponentt->BindAction("Crouch", IE_Released, this, &UFPSPlayerInput::UnCrouch);
-		InputComponentt->BindAction("Aiming", IE_Pressed, this, &UFPSPlayerInput::StartAiming);
-		InputComponentt->BindAction("Aiming", IE_Released, this, &UFPSPlayerInput::UndoAiming);
-		InputComponentt->BindAction("Fire", IE_Pressed, this, &UFPSPlayerInput::StartFire);
+		Input->BindAxis("Turn", this, &UFPSPlayerInput::Azimuth);
+		Input->BindAxis("LookUp", this, &UFPSPlayerInput::Elevation);
+		Input->BindAxis("MoveForward", this, &UFPSPlayerInput::MoveForward);
+		Input->BindAxis("MoveRight", this, &UFPSPlayerInput::MoveRight);
+		Input->BindAction("Crouch", IE_Pressed, this, &UFPSPlayerInput::Crouch);
+		Input->BindAction("Crouch", IE_Released, this, &UFPSPlayerInput::UnCrouch);
+		Input->BindAction("Aiming", IE_Pressed, this, &UFPSPlayerInput::StartAiming);
+		Input->BindAction("Aiming", IE_Released, this, &UFPSPlayerInput::UndoAiming);
+		Input->BindAction("Fire", IE_Pressed, this, &UFPSPlayerInput::StartFire);
 		UE_LOG(LogTemp, Error, TEXT("%s - has Component InputComponent..."), *GetOwner()->GetName())
 	}
 	else
@@ -56,11 +83,11 @@ void UFPSPlayerInput::SetupInputComponent(AFPSMannequin* OwnerPlayer, UInputComp
 void UFPSPlayerInput::Azimuth(float Val)
 {
 	/// Old Code
-	//auto Yaw = Val * GetWorld()->GetDeltaSeconds() * 45;
-	//auto NewRotation = FRotator(0.f, Yaw, 0.f);
-	//if (Player == nullptr) return;
-	//Player->GetCameraSeatComponent()->AddLocalRotation(NewRotation);
-	//LOG_S(FString("Mousex"));
+	/*auto Yaw = Val * GetWorld()->GetDeltaSeconds() * 45;
+	auto NewRotation = FRotator(0.f, Yaw, 0.f);
+	if (Player == nullptr) return;
+	Player->GetCameraSeatComponent()->AddLocalRotation(NewRotation);
+	LOG_S(FString("Mousex"));*/
 
 	Player->AddControllerYawInput(Val * 45 * GetWorld()->GetDeltaSeconds());
 
@@ -139,48 +166,80 @@ void UFPSPlayerInput::UnCrouch()
 
 void UFPSPlayerInput::StartAiming()
 {
-	CanAiming(true);
+	FightState = EFightState::Aim;
+	ApplyFightState(FightState);
 }
 
 void UFPSPlayerInput::UndoAiming()
 {
-
-	CanAiming(false);
-}
-
-void UFPSPlayerInput::CanAiming(bool Val)
-{
-	if (Val)
-	{
-		FireState = EFireState::Aim;
-
-		Player->bUseControllerRotationYaw = true;
-		Player->GetCameraArmComponent()->bUsePawnControlRotation = false;
-		Player->SetPermissionMoving(false);
-		Player->PlayAimingAnim(FireState);
-		LOG_I(Player->GetPermissionAiming());
-
-		AimingComponent->AimPoint();
-
-		FireState = EFireState::UndoAim;
-	}
-	else
-	{
-		Player->bUseControllerRotationYaw = false;
-		Player->GetCameraArmComponent()->bUsePawnControlRotation = true;
-		Player->SetPermissionMoving(true);
-		Player->PlayAimingAnim(FireState);
-
-		if (AimingComponent->GetTraceEffect())
-			AimingComponent->GetTraceEffect()->Deactivate();
+	switch (FightState)
+	{	
+	case EFightState::Aim:
+		FightState = EFightState::UndoAim;
+		ApplyFightState(FightState);
+		break;
+	default:
+		break;
 	}
 }
-
 
 void UFPSPlayerInput::StartFire()
 {
-	FireState = EFireState::Fire;
+	FightState = EFightState::Fire;
+	ApplyFightState(FightState);
+}
 
+
+void UFPSPlayerInput::ApplyFightState(EFightState State)
+{
+	
+	switch (State)
+	{
+	case EFightState::None:
+		break;
+	case EFightState::Aim:
+		ApplyAimState();
+		break;
+	case EFightState::UndoAim:
+		ApplyUndoAimState();
+		break;
+	case EFightState::Fire:
+		ApplyFireState();
+		break;
+	default:
+		break;
+	}
+}
+
+
+void UFPSPlayerInput::ApplyAimState()
+{
+	Player->bUseControllerRotationYaw = true;
+	//Player->bUseControllerRotationPitch = true;
+	//Player->GetCameraArmComponent()->bUsePawnControlRotation = false;
+	Player->SetPermissionMoving(false);
+	Player->PlayFightAnim(FightState);
+	LOG_I(Player->GetPermissionAiming());
+
+	//AimingComponent->AimPoint();
+}
+
+void UFPSPlayerInput::ApplyUndoAimState()
+{
+	Player->bUseControllerRotationYaw = false;
+	//Player->bUseControllerRotationPitch = false;
+	//Player->GetCameraArmComponent()->bUsePawnControlRotation = true;
+	Player->SetPermissionMoving(true);
+	Player->PlayFightAnim(FightState);
+
+	if (AimingComponent->GetTraceEffect())
+	{
+		AimingComponent->DestroyTraceEffect();
+	}
+}
+
+void UFPSPlayerInput::ApplyFireState()
+{
 	Player->Fire();
 	Player->SetPermissionFire(true);
 
@@ -190,6 +249,13 @@ void UFPSPlayerInput::StartFire()
 	Player->SetPermissionMoving(false);
 
 	if (AimingComponent->GetTraceEffect())
-		AimingComponent->GetTraceEffect()->Deactivate();
+	{
+		AimingComponent->DestroyTraceEffect();
+	}
+
+	FightState = EFightState::None;
 }
+
+
+
 

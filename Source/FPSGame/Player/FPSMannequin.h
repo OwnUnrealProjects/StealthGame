@@ -18,7 +18,7 @@ class USpringArmComponent;
 class UFPSPlayerInput;
 class UFPSPlayerAiming;
 class UTexture2D;
-enum  class EFireState : uint8;
+enum  class EFightState : uint8;
 
 class UAnimMontage;
 
@@ -59,8 +59,8 @@ private:
 
 protected:
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraSeat")
-	USceneComponent* CameraSeat;
+	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraSeat")
+	USceneComponent* CameraSeat;*/
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraArm")
 	USpringArmComponent* CameraArm;
@@ -130,14 +130,14 @@ public:
 	float GetDefalutMaxSpeed() { return DefaultMaxSpeed; }
 	float GetDefaultCrouchSpeed() { return DefaultCrouchSpeed; }
 
-	void PlayAimingAnim(EFireState State);
+	void PlayFightAnim(EFightState State);
 
 
 	void Fire();
 
 public:
 	
-	USceneComponent* GetCameraSeatComponent() const { return CameraSeat; }
+	//USceneComponent* GetCameraSeatComponent() const { return CameraSeat; }
 	USpringArmComponent* GetCameraArmComponent() const { return CameraArm; }
 	UCameraComponent* GetCameraComponent() const { return CameraComponent; }
 

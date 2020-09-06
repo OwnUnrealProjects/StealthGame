@@ -41,7 +41,8 @@ protected:
 
 protected:
 
-	void PlayAimBeam(FVector TraceEnd);
+	void SpawnTraceEffectAtLocation(FVector TraceEnd);
+	void UpdateTraceEffectLocation(FVector TraceEnd);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aiming")
 	FName AimTraceName;
@@ -52,4 +53,5 @@ public:
 
 	UParticleSystemComponent* GetTraceEffect() { return TraceComp; }
 	void AimPoint();
+	void DestroyTraceEffect();
 };

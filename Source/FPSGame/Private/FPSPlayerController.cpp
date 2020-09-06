@@ -55,6 +55,12 @@ void AFPSPlayerController::Possess(APawn* aPawn)
 
 
 
+//void AFPSPlayerController::AddPitchInput(float Val)
+//{
+//	Super::AddPitchInput(Val);
+//	LOG_F(RotationInput.Pitch);
+//}
+
 void AFPSPlayerController::InitPlayerState()
 {
 
