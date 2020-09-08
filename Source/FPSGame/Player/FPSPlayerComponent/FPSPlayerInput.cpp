@@ -5,6 +5,7 @@
 #include "../DebugTool/DebugLog.h"
 #include "../../FPSGame.h"
 #include "FPSPlayerAiming.h"
+#include "../../Public/FPSPlayerController.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SceneComponent.h"
@@ -30,6 +31,7 @@ void UFPSPlayerInput::BeginPlay()
 	Super::BeginPlay();
 	Player = Cast<AFPSMannequin>(GetOwner());
 	AimingComponent = GetOwner()->FindComponentByClass<UFPSPlayerAiming>();
+	Player->SetPermissionMoving(true);
 }
 
 
@@ -83,30 +85,33 @@ void UFPSPlayerInput::SetupInputComponent(UInputComponent* Input)
 void UFPSPlayerInput::Azimuth(float Val)
 {
 	/// Old Code
-	/*auto Yaw = Val * GetWorld()->GetDeltaSeconds() * 45;
-	auto NewRotation = FRotator(0.f, Yaw, 0.f);
-	if (Player == nullptr) return;
-	Player->GetCameraSeatComponent()->AddLocalRotation(NewRotation);
-	LOG_S(FString("Mousex"));*/
+	//float YawChange = Val * GetWorld()->GetDeltaSeconds() * 50;
+	//auto NewRotation = Player->GetCameraSeatComponent()->RelativeRotation.Yaw + YawChange;
+	//if (Player == nullptr) return;
+	////Player->GetCameraSeatComponent()->AddLocalRotation(FRotator(Player->GetCameraSeatComponent()->GetComponentRotation().Pitch,NewRotation,0));
+	//Player->GetCameraSeatComponent()->SetRelativeRotation(FRotator(Player->GetCameraSeatComponent()->RelativeRotation.Pitch,NewRotation,0));
+	//LOG_S(FString("Mousex"));
 
-	Player->AddControllerYawInput(Val * 45 * GetWorld()->GetDeltaSeconds());
+
+	Player->AddControllerYawInput(Val * 50 * GetWorld()->GetDeltaSeconds());
 
 }
 
 void UFPSPlayerInput::Elevation(float Val)
 {
 	/// Old Code
-	//float PitchChange = Val * GetWorld()->GetDeltaSeconds() * 50;
-	//if (Player == nullptr) return;
-	////Player->GetCameraArmComponent()->AddLocalRotation(NewRotation);
-	//auto NewPitch = Player->GetCameraArmComponent()->RelativeRotation.Pitch + PitchChange;
-	//auto UpdatePitch = FMath::Clamp<float>(NewPitch, -30, 10);
-	//Player->GetCameraArmComponent()->SetRelativeRotation(FRotator(UpdatePitch,0,0));
+	// We need it for Clamp Pitch
+	float PitchChange = Val * GetWorld()->GetDeltaSeconds() * 50;
+	if (Player == nullptr) return;
+	//Player->GetCameraArmComponent()->AddLocalRotation(NewRotation);
+	auto NewPitch = Player->GetCameraArmComponent()->RelativeRotation.Pitch + PitchChange;
+	auto UpdatePitch = FMath::Clamp<float>(NewPitch, -30, 10);
+	Player->GetCameraArmComponent()->SetRelativeRotation(FRotator(UpdatePitch,0,0));
 	//LOG_S(FString::Printf(TEXT("Pitch = %f"), UpdatePitch));
 
 
+	//Player->AddControllerPitchInput(Val * 45 * GetWorld()->GetDeltaSeconds());
 
-	Player->AddControllerPitchInput(Val * 45 * GetWorld()->GetDeltaSeconds());
 		
 }
 
@@ -122,6 +127,7 @@ void UFPSPlayerInput::MoveForward(float Val)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		Player->AddMovementInput(Direction, Val);
 		//Player->SetPermissionMoving(Val);
+		LOG_S(Direction.ToString());
 	}
 	
 
@@ -143,7 +149,7 @@ void UFPSPlayerInput::MoveRight(float Val)
 		Player->AddMovementInput(Direction, Val);
 		//Player->SetPermissionMoving(Val);
 	}
-
+	
 }
 
 void UFPSPlayerInput::Crouch()
@@ -215,8 +221,6 @@ void UFPSPlayerInput::ApplyFightState(EFightState State)
 void UFPSPlayerInput::ApplyAimState()
 {
 	Player->bUseControllerRotationYaw = true;
-	//Player->bUseControllerRotationPitch = true;
-	//Player->GetCameraArmComponent()->bUsePawnControlRotation = false;
 	Player->SetPermissionMoving(false);
 	Player->PlayFightAnim(FightState);
 	LOG_I(Player->GetPermissionAiming());
@@ -227,8 +231,6 @@ void UFPSPlayerInput::ApplyAimState()
 void UFPSPlayerInput::ApplyUndoAimState()
 {
 	Player->bUseControllerRotationYaw = false;
-	//Player->bUseControllerRotationPitch = false;
-	//Player->GetCameraArmComponent()->bUsePawnControlRotation = true;
 	Player->SetPermissionMoving(true);
 	Player->PlayFightAnim(FightState);
 

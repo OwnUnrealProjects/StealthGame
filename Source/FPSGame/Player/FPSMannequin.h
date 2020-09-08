@@ -6,7 +6,7 @@
 #include "GameFramework/Character.h"
 #include "FPSMannequin.generated.h"
 
-
+class AFPSPlayerController;
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
@@ -146,6 +146,8 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "ChracterAnim")
 	void CanCrouched(bool Enable);
+
+	AFPSPlayerController* GetSelfController();
 
 protected:
 	// Called when the game starts or when spawned

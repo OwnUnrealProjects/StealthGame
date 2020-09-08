@@ -5,6 +5,7 @@
 #include "../DebugTool/DebugLog.h"
 #include "FPSPlayerComponent/FPSPlayerInput.h"
 #include "FPSPlayerComponent/FPSPlayerAiming.h"
+#include "../Public/FPSPlayerController.h"
 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -36,7 +37,7 @@ AFPSMannequin::AFPSMannequin()
 	CameraArm->RelativeLocation = FVector(0, 0, 200.0);
 	CameraArm->TargetArmLength = 300;
 	CameraArm->bUsePawnControlRotation = true;
-	CameraArm->bInheritPitch = true;
+	CameraArm->bInheritPitch = false;
 	CameraArm->bInheritYaw = true;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
@@ -44,6 +45,7 @@ AFPSMannequin::AFPSMannequin()
 	CameraComponent->RelativeRotation = FRotator(-15,0,0);
 	
 	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
 	MannequinAimingComponent = CreateDefaultSubobject<UFPSPlayerAiming>(TEXT("MannequinAimingComonent"));
@@ -103,6 +105,11 @@ void AFPSMannequin::Fire()
 {
 	PlayAnimMontage(FireAnimation, 1.f, "Throw");
 
+}
+
+AFPSPlayerController* AFPSMannequin::GetSelfController()
+{
+	return Cast<AFPSPlayerController>(GetController());
 }
 
 // Called when the game starts or when spawned
