@@ -11,6 +11,8 @@
 #include "Components/SceneComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Net/UnrealNetwork.h"
+#include "DrawDebugHelpers.h"
 
 
 // Sets default values for this component's properties
@@ -19,8 +21,8 @@ UFPSPlayerInput::UFPSPlayerInput()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-	
-	SetIsReplicated(true);
+	FightState = EFightState::None;
+	//SetIsReplicated(true);
 
 }
 
@@ -58,6 +60,11 @@ void UFPSPlayerInput::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 
 }
 
+//void UFPSPlayerInput::OnRep_FightAnim()
+//{
+//	Player->PlayFightAnim(FightState);
+//}
+
 void UFPSPlayerInput::SetupInputComponent(UInputComponent* Input)
 {
 	
@@ -81,6 +88,19 @@ void UFPSPlayerInput::SetupInputComponent(UInputComponent* Input)
 		UE_LOG(LogTemp, Error, TEXT("%s - has not Component InputComponent !!!"), *GetOwner()->GetName())
 	}
 }
+
+//void UFPSPlayerInput::MultiCastFightAnim_Implementation(EFightState State)
+//{
+//	Player->PlayFightAnim(State);
+//}
+
+//void UFPSPlayerInput::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+//{
+//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+//
+//	//DOREPLIFETIME(UFPSPlayerInput, FightState);
+//
+//}
 
 void UFPSPlayerInput::Azimuth(float Val)
 {
@@ -127,7 +147,7 @@ void UFPSPlayerInput::MoveForward(float Val)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		Player->AddMovementInput(Direction, Val);
 		//Player->SetPermissionMoving(Val);
-		LOG_S(Direction.ToString());
+		//LOG_S(Direction.ToString());
 	}
 	
 
@@ -191,8 +211,10 @@ void UFPSPlayerInput::UndoAiming()
 
 void UFPSPlayerInput::StartFire()
 {
+	//FightState = EFightState::None;
 	FightState = EFightState::Fire;
 	ApplyFightState(FightState);
+	//OnRep_FightAnim();
 }
 
 
@@ -205,12 +227,15 @@ void UFPSPlayerInput::ApplyFightState(EFightState State)
 		break;
 	case EFightState::Aim:
 		ApplyAimState();
+		DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("AimState"), nullptr, FColor::Red, 10.f);
 		break;
 	case EFightState::UndoAim:
 		ApplyUndoAimState();
+		DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("UndoAimState"), nullptr, FColor::Red, 10.f);
 		break;
 	case EFightState::Fire:
 		ApplyFireState();
+		DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("FireState"), nullptr, FColor::Red, 10.f);
 		break;
 	default:
 		break;
@@ -225,6 +250,9 @@ void UFPSPlayerInput::ApplyAimState()
 	Player->PlayFightAnim(FightState);
 	LOG_I(Player->GetPermissionAiming());
 
+	//MultiCastFightAnim(FightState);
+	/*if(Player->Role != ROLE_Authority)
+		DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0,0,200), FString("AimState"), nullptr, FColor::Red, 10.f);*/
 	//AimingComponent->AimPoint();
 }
 
@@ -238,24 +266,40 @@ void UFPSPlayerInput::ApplyUndoAimState()
 	{
 		AimingComponent->DestroyTraceEffect();
 	}
+
+	//MultiCastFightAnim(FightState);
 }
 
 void UFPSPlayerInput::ApplyFireState()
 {
-	Player->Fire();
+	Player->PlayFightAnim(FightState);
 	Player->SetPermissionFire(true);
-
+	Player->SetPermissionMoving(false);
 
 	Player->bUseControllerRotationYaw = false;
 	Player->GetCameraArmComponent()->bUsePawnControlRotation = true;
-	Player->SetPermissionMoving(false);
+
+	if(Player->IsFightAnimation())
+		Player->SetPermissionFire(false);
 
 	if (AimingComponent->GetTraceEffect())
 	{
 		AimingComponent->DestroyTraceEffect();
 	}
 
-	FightState = EFightState::None;
+	//MultiCastFightAnim(FightState);
+	//FightState = EFightState::None;
+	switch (FightState)
+	{
+	case EFightState::None:
+		DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("None"), nullptr, FColor::Red, 10.f);
+		break;
+	case EFightState::Fire:
+		DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("FireState"), nullptr, FColor::Red, 10.f);
+		break;
+	default:
+		break;
+	}
 }
 
 

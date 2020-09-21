@@ -23,6 +23,15 @@ enum  class EFightState : uint8;
 class UAnimMontage;
 
 
+UENUM()
+enum  class EFightAnim : uint8
+{
+	None,
+	PlayAimAnim,
+	PlayUndoAimAnim,
+	PlayFireAnim
+};
+
 USTRUCT(BlueprintType, Blueprintable)
 struct FCharcterFeature
 {
@@ -81,9 +90,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Feature")
 	FCharcterFeature OwnFeatures;
 
-	/** AnimMontage to play each time we fire */
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
-	UAnimMontage* FireAnimation;
+
 
 
 	UPROPERTY(BlueprintReadWrite, Category = "CaracterMovement")
@@ -100,6 +107,22 @@ protected:
 	bool bAiming;
 	UPROPERTY(BlueprintReadOnly, Category = "CharacterAnim")
 	bool bFire;
+
+
+	/// Fire Multiplayer
+	/** AnimMontage to play each time we fire */
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Gameplay")
+	UAnimMontage* FightAnimMontage;
+	
+
+protected:
+	
+	// RPC is also called from HostPlayer
+	UFUNCTION(Server, Reliable, WithValidation)
+	void SR_FightAnim(const FName& SlotName, bool bEnabelPlayerYaw);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MC_FightAnim(const FName& SlotName);
 
 
 public:
@@ -124,6 +147,8 @@ public:
 	void SetPermissionFire(bool val) { bFire = val; }
 
 
+	bool IsFightAnimation() { return FightAnimMontage ? true : false; }
+
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerCrouch(bool UpdateCrouch);
 
@@ -132,8 +157,6 @@ public:
 
 	void PlayFightAnim(EFightState State);
 
-
-	void Fire();
 
 public:
 	
@@ -148,6 +171,8 @@ public:
 	void CanCrouched(bool Enable);
 
 	AFPSPlayerController* GetSelfController();
+
+
 
 protected:
 	// Called when the game starts or when spawned

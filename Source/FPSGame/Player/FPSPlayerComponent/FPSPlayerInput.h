@@ -46,8 +46,16 @@ private:
 	AFPSMannequin* Player = nullptr;
 	float CameraArmTargetRotation;
 
-	EFightState FightState;
 
+protected:
+
+	/*UPROPERTY(ReplicatedUsing=OnRep_FightAnim)
+	EFightState FightState;
+	UFUNCTION()
+	void OnRep_FightAnim();*/
+
+	//UPROPERTY(Replicated)
+	EFightState FightState;
 	UFPSPlayerAiming* AimingComponent;
 
 
@@ -56,6 +64,9 @@ public:
 
 	/// Setup (assumed) attached input component
 	void SetupInputComponent(UInputComponent* Input);
+
+	/*UFUNCTION(NetMulticast, Reliable)
+	void MultiCastFightAnim(EFightState State);*/
 
 private:
 

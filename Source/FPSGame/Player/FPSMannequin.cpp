@@ -42,7 +42,8 @@ AFPSMannequin::AFPSMannequin()
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(CameraArm);
-	CameraComponent->RelativeRotation = FRotator(-15,0,0);
+	CameraComponent->RelativeLocation = FVector(0, 100, 0);
+	CameraComponent->RelativeRotation = FRotator(-15,-10,0);
 	
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -52,8 +53,11 @@ AFPSMannequin::AFPSMannequin()
 	MannequinInputComponent = CreateDefaultSubobject<UFPSPlayerInput>(TEXT("MannequinInputComonent"));
 
 	bReplicates = true;
+	bReplicateMovement = true;
 
 }
+
+
 
 void AFPSMannequin::ServerCrouch_Implementation(bool UpdateCrouch)
 {
@@ -76,21 +80,32 @@ bool AFPSMannequin::ServerCrouch_Validate(bool UpdateCrouch)
 void AFPSMannequin::PlayFightAnim(EFightState State)
 {
 	
-	if (FireAnimation)
+	if (FightAnimMontage)
 	{
 
 		switch (State)
 		{
 		case EFightState::Aim:
 			bAiming = true;
-			PlayAnimMontage(FireAnimation, 1.f, "StartThrow");
+			// As RPC is executed on Server and
+			// As RPC is also called from HostPlayer and what Server Know is also is known HostPlayer
+			// We need not PlayAnimMontage() is Executed two times for HostPlayer
+			if(Role < ROLE_Authority)
+				PlayAnimMontage(FightAnimMontage, 1.f, "StartThrow");
+			SR_FightAnim(FName("StartThrow"), true);
+			LOG_S(FString("From Server To Client"));
 			break;
 		case EFightState::UndoAim:
 			bAiming = false;
-			PlayAnimMontage(FireAnimation, 1.f, "UndoThrow");
+			if (Role < ROLE_Authority)
+				PlayAnimMontage(FightAnimMontage, 1.f, "UndoThrow");
+			SR_FightAnim(FName("UndoThrow"), false);
 			break;
 		case EFightState::Fire:
-			PlayAnimMontage(FireAnimation, 1.f, "Throw");
+			bAiming = false;
+			if (Role < ROLE_Authority)
+				PlayAnimMontage(FightAnimMontage, 1.f, "Throw");
+			SR_FightAnim(FName("Throw"), false);
 			break;
 		case EFightState::None:
 			break;
@@ -101,11 +116,38 @@ void AFPSMannequin::PlayFightAnim(EFightState State)
 	}
 }
 
-void AFPSMannequin::Fire()
+void AFPSMannequin::SR_FightAnim_Implementation(const FName& SlotName, bool bEnabelPlayerYaw)
 {
-	PlayAnimMontage(FireAnimation, 1.f, "Throw");
-
+	/// RPC is also executed for HostPlayer
+	if (IsLocallyControlled() && Role == ROLE_Authority)
+	{
+		LOG_S(FString("Server Executed"));
+	}
+	bUseControllerRotationYaw = bEnabelPlayerYaw;
+	PlayAnimMontage(FightAnimMontage, 1.f, SlotName);
+	/// Multicast Replicated the Animation for all Client
+	MC_FightAnim(SlotName);
+	//LOG_S(FString("Server Executed"));
 }
+
+bool AFPSMannequin::SR_FightAnim_Validate(const FName& SlotName, bool bEnabelPlayerYaw)
+{
+
+	return true;
+}
+
+void AFPSMannequin::MC_FightAnim_Implementation(const FName& SlotName)
+{
+	
+	if (!IsLocallyControlled())
+	{
+		LOG_S(FString("NetMulticast Executed"));
+		PlayAnimMontage(FightAnimMontage, 1.f, SlotName);
+	}
+		
+}
+
+
 
 AFPSPlayerController* AFPSMannequin::GetSelfController()
 {
@@ -133,6 +175,7 @@ void AFPSMannequin::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 	DOREPLIFETIME(AFPSMannequin, bCrouch);
 	DOREPLIFETIME(AFPSMannequin, bMoving);
+	DOREPLIFETIME(AFPSMannequin, FightAnimMontage);
 
 }
 

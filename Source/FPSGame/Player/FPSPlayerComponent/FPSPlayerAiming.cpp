@@ -29,7 +29,7 @@ UFPSPlayerAiming::UFPSPlayerAiming()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-	SetIsReplicated(true);
+	//SetIsReplicated(true);
 
 	BulletSpread = 2.f;
 	AimTraceName = "AimBeamEnd";
@@ -99,7 +99,7 @@ void UFPSPlayerAiming::AimPoint()
 	else
 	{
 		SpawnTraceEffectAtLocation(EndLocation);
-		TraceComp->bIsActive = true;
+		//TraceComp->bIsActive = true;
 		LOG_S(FString("TraceComp is Spawned"));
 	}
 	
