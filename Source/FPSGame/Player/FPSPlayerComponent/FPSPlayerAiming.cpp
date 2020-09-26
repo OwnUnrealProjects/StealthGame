@@ -9,6 +9,9 @@
 #include "Camera/CameraComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/World.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/ArrowComponent.h"
 
 //#define LOG_S
 #define OUT
@@ -33,6 +36,8 @@ UFPSPlayerAiming::UFPSPlayerAiming()
 
 	BulletSpread = 2.f;
 	AimTraceName = "AimBeamEnd";
+	S_Tangent = "Source_Tangent";
+	T_Tangent = "Target_Tangent";
 }
 
 
@@ -53,7 +58,7 @@ void UFPSPlayerAiming::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 }
 
-void UFPSPlayerAiming::AimPoint()
+void UFPSPlayerAiming::AimPoint(float ParticleTangent)
 {
 	FVector StartLocation;
 	FRotator StartRotation;
@@ -61,6 +66,7 @@ void UFPSPlayerAiming::AimPoint()
 
 	StartLocation = PlayerCamera->GetComponentLocation();
 	StartRotation = PlayerCamera->GetComponentRotation();
+	//StartRotation = Player->GetActorRotation();
 
 
 	FVector ShotDirection = StartRotation.Vector();
@@ -83,7 +89,7 @@ void UFPSPlayerAiming::AimPoint()
 
 
 	FHitResult Hit;
-	bool bIsDamage = GetWorld()->LineTraceSingleByChannel(
+	bool LTSC = GetWorld()->LineTraceSingleByChannel(
 		OUT Hit,
 		OUT StartLocation,
 		OUT EndLocation,
@@ -91,24 +97,48 @@ void UFPSPlayerAiming::AimPoint()
 		QueryParams
 	);
 
-	if (TraceComp/* && TraceComp->bIsActive*/)
+	if (LTSC)
 	{
-		UpdateTraceEffectLocation(EndLocation);
-		//LOG_S(FString("Activeted"));
+		LineTracePoint = Hit.Location;
+		LOG_S(FString::Printf(TEXT("LTSC Hit = %s"), *Hit.GetActor()->GetName()));
 	}
 	else
 	{
-		SpawnTraceEffectAtLocation(EndLocation);
+		LineTracePoint = EndLocation;
+		LOG_S(FString("LTSC = false"));
+	}
+
+	if (TraceComp/* && TraceComp->bIsActive*/)
+	{
+		UpdateTraceEffectLocation(LineTracePoint, ParticleTangent);
+		LOG_S(FString("TraceComp is Updated"));
+	}
+	else
+	{
+		SpawnTraceEffectAtLocation(LineTracePoint, ParticleTangent);
 		//TraceComp->bIsActive = true;
 		LOG_S(FString("TraceComp is Spawned"));
 	}
 	
+	//DrawDebugLine(
+	//	GetWorld(),
+	//	Player->GetActorLocation(),//OUT StartLocation,
+	//	OUT LineTracePoint,
+	//	FColor(255, 0, 0),
+	//	false,
+	//	10.f,
+	//	0.f,
+	//	5.f
+	//);
 
 	if (DebugFireLocationsDrawing > 0)
 	{
 		DrawDebugSphere(GetWorld(), StartLocation, 100, 12, FColor::Yellow, false, 2.f, 0, 1.f);
-		DrawDebugSphere(GetWorld(), EndLocation, 100, 12, FColor::Red, false, 2.f, 0, 3.f);
+		DrawDebugSphere(GetWorld(), LineTracePoint, 100, 12, FColor::Red, false, 10.f, 0, 3.f);
 	}
+
+	
+
 }
 
 void UFPSPlayerAiming::DestroyTraceEffect()
@@ -119,26 +149,30 @@ void UFPSPlayerAiming::DestroyTraceEffect()
 	TraceComp = nullptr;
 }
 
-void UFPSPlayerAiming::SpawnTraceEffectAtLocation(FVector TraceEnd)
+void UFPSPlayerAiming::SpawnTraceEffectAtLocation(FVector TraceEnd, float ParticleTangent)
 {
 
 
 	if (AimBeamEffect)
 	{
-		TraceComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), AimBeamEffect, Player->GetActorLocation());
+		TraceComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), AimBeamEffect, Player->GetMesh()->GetSocketLocation("StartBeamEffect"));
 	
 		if (TraceComp)
 		{
 			TraceComp->SetVectorParameter(AimTraceName, TraceEnd);
+			TraceComp->SetVectorParameter(S_Tangent, FVector(0, 0, ParticleTangent));
+			TraceComp->SetVectorParameter(T_Tangent, FVector(0, 0, -ParticleTangent));
 		}
 	}
 }
 
-void UFPSPlayerAiming::UpdateTraceEffectLocation(FVector TraceEnd)
+void UFPSPlayerAiming::UpdateTraceEffectLocation(FVector TraceEnd, float ParticleTangent)
 {
 	if (TraceComp)
 	{
 		TraceComp->SetVectorParameter(AimTraceName, TraceEnd);
+		TraceComp->SetVectorParameter(S_Tangent, FVector(0, 0, ParticleTangent));
+		TraceComp->SetVectorParameter(T_Tangent, FVector(0, 0, -ParticleTangent));
 	}
 }
 

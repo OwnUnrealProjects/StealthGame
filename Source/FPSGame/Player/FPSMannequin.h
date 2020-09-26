@@ -21,6 +21,8 @@ class UTexture2D;
 enum  class EFightState : uint8;
 
 class UAnimMontage;
+class AFPSStone;
+class UArrowComponent;
 
 
 UENUM()
@@ -60,7 +62,7 @@ class FPSGAME_API AFPSMannequin : public ACharacter
 
 public:
 	// Sets default values for this character's properties
-	AFPSMannequin();
+	AFPSMannequin(const FObjectInitializer& ObjectInitializer);
 
 private:
 
@@ -78,6 +80,9 @@ protected:
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	UCameraComponent* CameraComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Aiming")
+	UArrowComponent* StoneSpawnPoint;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	UPawnNoiseEmitterComponent* NoiseEmitterComp;
@@ -113,6 +118,13 @@ protected:
 	/** AnimMontage to play each time we fire */
 	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Gameplay")
 	UAnimMontage* FightAnimMontage;
+
+
+
+	//Projectile
+	/** Projectile class to spawn */
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	TSubclassOf<AFPSStone> StoneBlueprinClass;
 	
 
 protected:
@@ -124,6 +136,10 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void MC_FightAnim(const FName& SlotName);
 
+	UFUNCTION(BlueprintCallable, Category = "Fire")
+	void Fire();
+
+	FVector CalculateStoneVelocity();
 
 public:
 	

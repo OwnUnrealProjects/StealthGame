@@ -8,6 +8,7 @@
 
 
 class AFPSMannequin;
+class UParticleSystemComponent;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FPSGAME_API UFPSPlayerAiming : public UActorComponent
@@ -39,19 +40,27 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Aiming")
 	float LineTraceLength = 1000;
 
+	FVector LineTracePoint;
+
 protected:
 
-	void SpawnTraceEffectAtLocation(FVector TraceEnd);
-	void UpdateTraceEffectLocation(FVector TraceEnd);
+	void SpawnTraceEffectAtLocation(FVector TraceEnd, float ParticleTangent);
+	void UpdateTraceEffectLocation(FVector TraceEnd, float ParticleTangent);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aiming")
 	FName AimTraceName;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aiming")
+	FName S_Tangent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aiming")
+	FName T_Tangent;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Aiming")
 	UParticleSystem* AimBeamEffect;
 
 public:
 
 	UParticleSystemComponent* GetTraceEffect() { return TraceComp; }
-	void AimPoint();
+	void AimPoint(float ParticleTangent);
 	void DestroyTraceEffect();
+
+	FVector GetLineTraceEndPoint() { return LineTracePoint; }
 };

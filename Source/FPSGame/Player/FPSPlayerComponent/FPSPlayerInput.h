@@ -46,6 +46,7 @@ private:
 	AFPSMannequin* Player = nullptr;
 	float CameraArmTargetRotation;
 
+	float Zvalue;
 
 protected:
 
@@ -64,6 +65,8 @@ public:
 
 	/// Setup (assumed) attached input component
 	void SetupInputComponent(UInputComponent* Input);
+
+	float GetZvalue() { return Zvalue; }
 
 	/*UFUNCTION(NetMulticast, Reliable)
 	void MultiCastFightAnim(EFightState State);*/

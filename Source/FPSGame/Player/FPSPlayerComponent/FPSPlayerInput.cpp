@@ -7,6 +7,7 @@
 #include "FPSPlayerAiming.h"
 #include "../../Public/FPSPlayerController.h"
 
+#include "Engine/World.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SceneComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -23,6 +24,8 @@ UFPSPlayerInput::UFPSPlayerInput()
 	PrimaryComponentTick.bCanEverTick = true;
 	FightState = EFightState::None;
 	//SetIsReplicated(true);
+
+	Zvalue = 80.f;
 
 }
 
@@ -49,7 +52,7 @@ void UFPSPlayerInput::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	{
 	case EFightState::Aim:
 		//LOG_S(FString("AimingState"));
-		AimingComponent->AimPoint();
+		AimingComponent->AimPoint(Zvalue);
 		break;
 	case  EFightState::None:
 		//LOG_S(FString("NonAimState"));
@@ -120,13 +123,26 @@ void UFPSPlayerInput::Azimuth(float Val)
 void UFPSPlayerInput::Elevation(float Val)
 {
 	/// Old Code
+	if (Val != 0.f)
+	{
 	// We need it for Clamp Pitch
-	float PitchChange = Val * GetWorld()->GetDeltaSeconds() * 50;
-	if (Player == nullptr) return;
-	//Player->GetCameraArmComponent()->AddLocalRotation(NewRotation);
-	auto NewPitch = Player->GetCameraArmComponent()->RelativeRotation.Pitch + PitchChange;
-	auto UpdatePitch = FMath::Clamp<float>(NewPitch, -30, 10);
-	Player->GetCameraArmComponent()->SetRelativeRotation(FRotator(UpdatePitch,0,0));
+		float PitchChange = Val * GetWorld()->GetDeltaSeconds() * 50;
+		if (Player == nullptr) return;
+		//Player->GetCameraArmComponent()->AddLocalRotation(NewRotation);
+		auto NewPitch = Player->GetCameraArmComponent()->RelativeRotation.Pitch + PitchChange;
+		auto UpdatePitch = FMath::Clamp<float>(NewPitch, -30, 10);
+		Player->GetCameraArmComponent()->SetRelativeRotation(FRotator(UpdatePitch,0,0));
+		//LOG_F(Zvalue);
+		//LOG_F(PitchChange);
+		//LOG_F(Val * GetWorld()->GetDeltaSeconds() * 50);
+
+
+
+		Zvalue = Zvalue + PitchChange * 2.f;
+		Zvalue = FMath::Clamp<float>(Zvalue, 20, 100);
+
+		LOG_F(Zvalue);
+	}
 	//LOG_S(FString::Printf(TEXT("Pitch = %f"), UpdatePitch));
 
 
