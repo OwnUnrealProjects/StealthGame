@@ -17,6 +17,7 @@ class UPawnNoiseEmitterComponent;
 class USpringArmComponent;
 class UFPSPlayerInput;
 class UFPSPlayerAiming;
+class UFPSPlayerFireComponent;
 class UTexture2D;
 enum  class EFightState : uint8;
 
@@ -49,6 +50,12 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Feature")
 	float Smart;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Feature")
+	float FireDistance;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Feature")
+	float AimPrecision;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Feature")
 	UTexture2D* PlayerImage;
@@ -91,6 +98,8 @@ protected:
 	UFPSPlayerInput* MannequinInputComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	UFPSPlayerAiming* MannequinAimingComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+	UFPSPlayerFireComponent* MannequinFireComponent;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Feature")
 	FCharcterFeature OwnFeatures;
@@ -125,7 +134,7 @@ protected:
 	/** Projectile class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	TSubclassOf<AFPSStone> StoneBlueprinClass;
-	
+	float BulletSpread = 5.f;
 
 protected:
 	
@@ -139,7 +148,6 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Fire")
 	void Fire();
 
-	FVector CalculateStoneVelocity();
 
 public:
 	

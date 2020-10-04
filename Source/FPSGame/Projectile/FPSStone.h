@@ -42,7 +42,7 @@ public:
 	/** Returns ProjectileMovement subobject **/
 	UProjectileMovementComponent* GetStoneMovement() const { return StoneMovement; }
 
-	void LaunchStone(FVector StoneVelocity);
+	void LaunchStone(float speed);
 
 protected:
 	// Called when the game starts or when spawned

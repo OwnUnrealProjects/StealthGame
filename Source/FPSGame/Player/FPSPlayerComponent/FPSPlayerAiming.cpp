@@ -66,7 +66,6 @@ void UFPSPlayerAiming::AimPoint(float ParticleTangent)
 
 	StartLocation = PlayerCamera->GetComponentLocation();
 	StartRotation = PlayerCamera->GetComponentRotation();
-	//StartRotation = Player->GetActorRotation();
 
 
 	FVector ShotDirection = StartRotation.Vector();

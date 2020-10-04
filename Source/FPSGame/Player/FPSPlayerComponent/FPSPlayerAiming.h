@@ -37,8 +37,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Aiming", meta = (ClampMin = 0.f))
 	float BulletSpread;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Aiming")
-	float LineTraceLength = 1000;
+	UPROPERTY(EditDefaultsOnly, Category = "Aiming", meta = (ClampMin = 5000.f, ClampMax = 10000.f))
+	float LineTraceLength = 5000;
 
 	FVector LineTracePoint;
 
@@ -63,4 +63,6 @@ public:
 	void DestroyTraceEffect();
 
 	FVector GetLineTraceEndPoint() { return LineTracePoint; }
+
+	float GetLineTraceLength() { return LineTraceLength; }
 };

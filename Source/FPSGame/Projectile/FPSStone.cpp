@@ -4,7 +4,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
-
+#include "DrawDebugHelpers.h"
 
 #include "../DebugTool/DebugLog.h"
 
@@ -59,6 +59,8 @@ void AFPSStone::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimiti
 
 	}
 
+	DrawDebugSphere(GetWorld(), GetActorLocation(), 25, 12, FColor::Green, false, 10.f, 0, 1.f);
+
 	if (Role == ROLE_Authority)
 	{
 		MakeNoise(10.f, Instigator); // Instigator set Fire() function
@@ -66,7 +68,7 @@ void AFPSStone::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimiti
 	}
 }
 
-void AFPSStone::LaunchStone(FVector StoneVelocity)
+void AFPSStone::LaunchStone(float speed)
 {
 	//const FRotator Rotation = GetActorRotation();
 	//const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -77,9 +79,9 @@ void AFPSStone::LaunchStone(FVector StoneVelocity)
 
 	//StoneMovement->InitialSpeed = 1000.f;
 	//StoneMovement->SetVelocityInLocalSpace((FVector::ForwardVector + FVector(0,0,StoneVelocity.Z * 5)) * 1500);
-	//StoneMovement->SetVelocityInLocalSpace(FVector::ForwardVector * 2500);
+	StoneMovement->SetVelocityInLocalSpace(FVector::ForwardVector * speed);
 	//StoneMovement->SetVelocityInLocalSpace(-Veloctity * 1500);
-	//StoneMovement->Activate();
+	StoneMovement->Activate();
 }
 
 // Called when the game starts or when spawned

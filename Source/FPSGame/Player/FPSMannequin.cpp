@@ -5,6 +5,7 @@
 #include "../DebugTool/DebugLog.h"
 #include "FPSPlayerComponent/FPSPlayerInput.h"
 #include "FPSPlayerComponent/FPSPlayerAiming.h"
+#include "FPSPlayerComponent/FPSPlayerFireComponent.h"
 #include "../Public/FPSPlayerController.h"
 #include "../Projectile/FPSStone.h"
 #include "../FPSGame.h"
@@ -17,9 +18,9 @@
 #include "Net/UnrealNetwork.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "DrawDebugHelpers.h"
 #include "Components/ArrowComponent.h"
 #include "Animation/AnimMontage.h"
+#include "DrawDebugHelpers.h"
 
 
 #define OUT
@@ -65,6 +66,7 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 
 	MannequinAimingComponent = CreateDefaultSubobject<UFPSPlayerAiming>(TEXT("MannequinAimingComonent"));
 	MannequinInputComponent = CreateDefaultSubobject<UFPSPlayerInput>(TEXT("MannequinInputComonent"));
+	MannequinFireComponent = CreateDefaultSubobject<UFPSPlayerFireComponent>(TEXT("MannequinFireComonent"));
 
 	bReplicates = true;
 	bReplicateMovement = true;
@@ -169,119 +171,61 @@ void AFPSMannequin::Fire()
 {
 	if (StoneBlueprinClass)
 	{
-		//UE_LOG(LogTemp, Error, TEXT("Rotation StoinPoint = %s"), *StoneSpawnPoint->GetComponentRotation().ToString());
-		//StoneSpawnPoint->SetRelativeRotation(NewRotation);
-		//LOG_S(FString::Printf((TEXT("Rotation StoinPoint = %s"), *StoneSpawnPoint->GetComponentRotation().ToString())));
-		//UE_LOG(LogTemp, Warning, TEXT("Rotation StoinPoint = %s"), *StoneSpawnPoint->GetComponentRotation().ToString());
+	
+		// FVector StoneLocation = GetMesh()->GetSocketLocation("StoneStartPoint"); -- 
+		   // In Socket location case Stone spawn and SuggestProjectileVelocity() not work properly
+		   // Fire location don't match Aim location
 
-		FVector StoneLocation = StoneSpawnPoint->GetComponentLocation();  //GetMesh()->GetSocketLocation("StoneStartPoint");
-		FRotator StoneRotation = StoneSpawnPoint->GetComponentRotation(); //GetMesh()->GetSocketRotation("StoneStartPoint");
+		FVector StoneLocation = StoneSpawnPoint->GetComponentLocation();
+		FVector EndLocation = MannequinAimingComponent->GetLineTraceEndPoint();
+		float Speed = MannequinAimingComponent->GetLineTraceLength() / 2;
+		
 
+
+		/// SugestProjectileVelocity
+		FVector DirectionLocation = MannequinFireComponent->GetFireDirection(StoneLocation, EndLocation, Speed);
+		LOG_S(FString::Printf(TEXT("FFF NormalRotation = %s"), *DirectionLocation.GetSafeNormal().Rotation().ToString()));
+		float HalfRad = FMath::DegreesToRadians(BulletSpread);
+		DirectionLocation = FMath::VRandCone(DirectionLocation, HalfRad, HalfRad);
+
+		FVector NormalLocation = DirectionLocation.GetSafeNormal();
+		FRotator NormalRotation = NormalLocation.Rotation();
+		
+		//NormalRotation.Yaw += 10.f;
+			/// Spread Bullet
+
+		//FRotator NormalRotation = NormalLocation.Rotation();
+
+		LOG_S(FString::Printf(TEXT("FFF NormalRotation = %s"), *NormalRotation.ToString()));
+		LOG_S(FString::Printf(TEXT("FFF Speed = %f"), Speed));
+		
 
 		//Set Spawn Collision Handling Override
 		FActorSpawnParameters ActorSpawnParams;
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 		ActorSpawnParams.Instigator = this;
 
-
-		FVector NormalLocation = CalculateStoneVelocity();
-		FRotator StoneForwardRotation = StoneSpawnPoint->GetForwardVector().Rotation();
-		FRotator NormalRotation = NormalLocation.Rotation();
-		FRotator DeltaRotation = NormalRotation - StoneForwardRotation;
-		FRotator SpawnRotation = FRotator(DeltaRotation.Pitch, DeltaRotation.Yaw, 0);
+		AFPSStone* Stone = GetWorld()->SpawnActor<AFPSStone>(StoneBlueprinClass, StoneLocation, NormalRotation /*ActorSpawnParams*/);
 
 
-		AFPSStone* Stone = GetWorld()->SpawnActor<AFPSStone>(StoneBlueprinClass, StoneLocation, StoneRotation/*StoneRotation*//*, ActorSpawnParams*/);
-
-		UE_LOG(LogTemp, Warning, TEXT("ForwardVector StonePoint = %s"), *StoneSpawnPoint->GetForwardVector().ToString());
-		UE_LOG(LogTemp, Warning, TEXT("ForwardVector Stone = %s"), *Stone->GetActorForwardVector().ToString());
-		/*FVector NormalLocation = CalculateStoneVelocity();
-		FRotator StoneForwardRotation = Stone->GetActorForwardVector().Rotation();
-		FRotator NormalRotation = NormalLocation.Rotation();
-		FRotator DeltaRotation = NormalRotation - StoneForwardRotation;*/
-
-		//Stone->SetActorRelativeRotation(FRotator(DeltaRotation.Pitch, DeltaRotation.Yaw, 0));
-
-		/*DrawDebugLine(
+		DrawDebugLine(
 			GetWorld(),
 			Stone->GetActorLocation(),
-			Stone->GetActorForwardVector() * 100,
-			FColor(255, 0, 0),
+			Stone->GetActorLocation() + Stone->GetActorForwardVector() * 200.f,
+			FColor(0, 255, 0),
 			false,
 			10.f,
 			0.f,
 			5.f
-		);*/
+		);
 
-		//Stone->LaunchStone(CameraArm->GetComponentRotation().Vector() /*FVector(0, 0, MannequinInputComponent->GetZvalue())*/);
+		Stone->LaunchStone(Speed);
 		LOG_S(FString("ProjectileStone"));
 	}
+
 }
 
-FVector AFPSMannequin::CalculateStoneVelocity()
-{
 
-	FVector StartLocation = GetMesh()->GetSocketLocation("StoneStartPoint"); // CameraComponent->GetComponentLocation();
-	//FRotator StartRotation = GetMesh()->GetSocketRotation("StonePoint"); // CameraComponent->GetComponentRotation();
-
-	FVector EndLocation = MannequinAimingComponent->GetLineTraceEndPoint();
-	
-	/*DrawDebugLine(
-		GetWorld(),
-		StartLocation,
-		EndLocation,
-		FColor(255, 0, 0),
-		false,
-		0.f,
-		0.f,
-		5.f
-	);*/
-
-	//DrawDebugSphere(GetWorld(), StartLocation, 25, 12, FColor::Yellow, false, 2.f, 0, 1.f);
-	//DrawDebugSphere(GetWorld(), EndLocation, 25, 12, FColor::Red, false, 20.f, 0, 3.f);
-	LOG_S(FString::Printf(TEXT("ProjectileEndPoint = %s"), *EndLocation.ToString()));
-	LOG_S(FString::Printf(TEXT("ProjectileStartPoint = %s"), *StartLocation.ToString()));
-	//LOG_S(FString::Printf(TEXT("ProjectileShotDirection  = %s"), *ShotDirection.ToString()));
-	//LOG_S(FString::Printf(TEXT("ProjectileRotation  = %s"), *StartRotation.ToString()));
-
-	/*FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-	QueryParams.bTraceComplex = true;
-	QueryParams.bReturnPhysicalMaterial = true;
-
-	FHitResult Hit;
-	bool LTSC = GetWorld()->LineTraceSingleByChannel(
-		OUT Hit,
-		OUT StartLocation,
-		OUT EndLocation,
-		COLLISION_AIM,
-		QueryParams
-	);*/
-
-
-	FVector StartStoneLocation = StoneSpawnPoint->GetComponentLocation();//GetMesh()->GetSocketLocation("StoneStartPoint");
-	FVector LaunchVelocity;
-
-	UGameplayStatics::SuggestProjectileVelocity
-	(
-		this,
-		OUT LaunchVelocity,
-		StartStoneLocation,
-		EndLocation,
-		1000.f,
-		false,
-		0.f,
-		0.f,
-		ESuggestProjVelocityTraceOption::DoNotTrace
-	);
-
-	DrawDebugSphere(GetWorld(), StartStoneLocation, 25, 12, FColor::Yellow, false, 10.f, 0, 1.f);
-	DrawDebugSphere(GetWorld(), EndLocation, 25, 12, FColor::Red, false, 10.f, 0, 3.f);
-
-	auto StoneDirection = LaunchVelocity.GetSafeNormal();
-
-	return StoneDirection;
-}
 
 AFPSPlayerController* AFPSMannequin::GetSelfController()
 {
