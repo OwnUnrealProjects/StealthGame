@@ -59,7 +59,7 @@ protected:
 	EFightState FightState;
 	UFPSPlayerAiming* AimingComponent;
 
-
+	void DestroyAimPoint();
 
 public:
 
@@ -97,5 +97,7 @@ private:
 	void ApplyFireState();
 	
 	void ApplyFightState(EFightState State);
+
+	FTimerHandle TimerHandle_DestroyAimPoint;
 
 };

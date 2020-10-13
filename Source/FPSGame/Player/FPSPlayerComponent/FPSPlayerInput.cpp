@@ -68,6 +68,8 @@ void UFPSPlayerInput::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 //	Player->PlayFightAnim(FightState);
 //}
 
+
+
 void UFPSPlayerInput::SetupInputComponent(UInputComponent* Input)
 {
 	
@@ -141,7 +143,7 @@ void UFPSPlayerInput::Elevation(float Val)
 		Zvalue = Zvalue + PitchChange * 2.f;
 		Zvalue = FMath::Clamp<float>(Zvalue, 20, 100);
 
-		LOG_F(Zvalue);
+		//LOG_F(Zvalue);
 	}
 	//LOG_S(FString::Printf(TEXT("Pitch = %f"), UpdatePitch));
 
@@ -266,6 +268,8 @@ void UFPSPlayerInput::ApplyAimState()
 	Player->PlayFightAnim(FightState);
 	LOG_I(Player->GetPermissionAiming());
 
+	GetWorld()->GetTimerManager().ClearTimer(TimerHandle_DestroyAimPoint);
+	Player->SetPermissionAiming(true);
 	//MultiCastFightAnim(FightState);
 	/*if(Player->Role != ROLE_Authority)
 		DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0,0,200), FString("AimState"), nullptr, FColor::Red, 10.f);*/
@@ -283,7 +287,16 @@ void UFPSPlayerInput::ApplyUndoAimState()
 		AimingComponent->DestroyTraceEffect();
 	}
 
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle_DestroyAimPoint, this, &UFPSPlayerInput::DestroyAimPoint, 1.f, false);
+
 	//MultiCastFightAnim(FightState);
+}
+
+void UFPSPlayerInput::DestroyAimPoint()
+{
+	Player->SetPermissionAiming(false);
+	GetWorld()->GetTimerManager().ClearTimer(TimerHandle_DestroyAimPoint);
+	//LOG_S(FString("PermisionAiming = fasle"));
 }
 
 void UFPSPlayerInput::ApplyFireState()
@@ -303,9 +316,11 @@ void UFPSPlayerInput::ApplyFireState()
 		AimingComponent->DestroyTraceEffect();
 	}
 
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle_DestroyAimPoint, this, &UFPSPlayerInput::DestroyAimPoint, 1.f, false);
+
 	//MultiCastFightAnim(FightState);
 	//FightState = EFightState::None;
-	switch (FightState)
+	/*switch (FightState)
 	{
 	case EFightState::None:
 		DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("None"), nullptr, FColor::Red, 10.f);
@@ -315,7 +330,7 @@ void UFPSPlayerInput::ApplyFireState()
 		break;
 	default:
 		break;
-	}
+	}*/
 }
 
 

@@ -12,6 +12,7 @@
 #include "Engine/World.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/ArrowComponent.h"
+#include "Net/UnrealNetwork.h"
 
 //#define LOG_S
 #define OUT
@@ -99,11 +100,13 @@ void UFPSPlayerAiming::AimPoint(float ParticleTangent)
 	if (LTSC)
 	{
 		LineTracePoint = Hit.Location;
+		SR_UpdateLineTracePoint(Hit.Location);
 		LOG_S(FString::Printf(TEXT("LTSC Hit = %s"), *Hit.GetActor()->GetName()));
 	}
 	else
 	{
 		LineTracePoint = EndLocation;
+		SR_UpdateLineTracePoint(EndLocation);
 		LOG_S(FString("LTSC = false"));
 	}
 
@@ -175,3 +178,22 @@ void UFPSPlayerAiming::UpdateTraceEffectLocation(FVector TraceEnd, float Particl
 	}
 }
 
+
+
+
+void UFPSPlayerAiming::SR_UpdateLineTracePoint_Implementation(FVector EndPoint)
+{
+	LineTracePoint = EndPoint;
+}
+
+bool UFPSPlayerAiming::SR_UpdateLineTracePoint_Validate(FVector EndPoint)
+{
+	return true;
+}
+
+void UFPSPlayerAiming::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UFPSPlayerAiming, LineTracePoint);
+
+}

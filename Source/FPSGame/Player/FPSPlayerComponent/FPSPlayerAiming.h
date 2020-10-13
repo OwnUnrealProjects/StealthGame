@@ -40,12 +40,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Aiming", meta = (ClampMin = 5000.f, ClampMax = 10000.f))
 	float LineTraceLength = 5000;
 
+	UPROPERTY(Replicated)
 	FVector LineTracePoint;
 
-protected:
-
-	void SpawnTraceEffectAtLocation(FVector TraceEnd, float ParticleTangent);
-	void UpdateTraceEffectLocation(FVector TraceEnd, float ParticleTangent);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aiming")
 	FName AimTraceName;
@@ -55,6 +52,16 @@ protected:
 	FName T_Tangent;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Aiming")
 	UParticleSystem* AimBeamEffect;
+
+
+protected:
+
+	void SpawnTraceEffectAtLocation(FVector TraceEnd, float ParticleTangent);
+	void UpdateTraceEffectLocation(FVector TraceEnd, float ParticleTangent);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void SR_UpdateLineTracePoint(FVector EndPoint);
+
 
 public:
 

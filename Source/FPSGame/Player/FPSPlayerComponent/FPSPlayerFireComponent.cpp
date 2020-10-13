@@ -35,9 +35,9 @@ FVector UFPSPlayerFireComponent::GetFireDirection(FVector start, FVector end, fl
 
 	FVector LaunchVelocity = FVector::ZeroVector;
 
-	bool SPV = UGameplayStatics::SuggestProjectileVelocity
+	/*bool SPV = UGameplayStatics::SuggestProjectileVelocity
 	(
-		this,
+		Player,
 		OUT LaunchVelocity,
 		start,
 		end,
@@ -46,9 +46,12 @@ FVector UFPSPlayerFireComponent::GetFireDirection(FVector start, FVector end, fl
 		0.f,
 		0.f,
 		ESuggestProjVelocityTraceOption::DoNotTrace
-	);
+	);*/
 
-	LOG_S(FString::Printf(TEXT("Projectile_StartStoneLocation = %s"), *start.ToString()));
+	bool SPV = SuggestStoneVelocity(LaunchVelocity, start, end, speed, false);
+
+	LOG_S(FString::Printf(TEXT("EEE Projectile_StartStoneLocation = %s"), *start.ToString()));
+	LOG_S(FString::Printf(TEXT("EEE Projectile_EndLocation = %s"), *end.ToString()));
 
 	if (SPV)
 	{
@@ -66,6 +69,66 @@ FVector UFPSPlayerFireComponent::GetFireDirection(FVector start, FVector end, fl
 }
 
 
+
+bool UFPSPlayerFireComponent::SuggestStoneVelocity(FVector& OutTossVelocity, FVector Start, FVector End, float TossSpeed, bool bFavorHighArc)
+{
+	const FVector FlightDelta = End - Start;
+	const FVector DirXY = FlightDelta.GetSafeNormal2D();
+	const float DeltaXY = FlightDelta.Size2D();
+
+	const float DeltaZ = FlightDelta.Z;
+
+	const float TossSpeedSq = FMath::Square(TossSpeed);
+
+	/*const UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+	if (World == nullptr)
+	{
+		return false;
+	}*/
+	const float GravityZ = -GetWorld()->GetGravityZ();;
+
+	// v^4 - g*(g*x^2 + 2*y*v^2)
+	const float InsideTheSqrt = FMath::Square(TossSpeedSq) - GravityZ * ((GravityZ * FMath::Square(DeltaXY)) + (2.f * DeltaZ * TossSpeedSq));
+	if (InsideTheSqrt < 0.f)
+	{
+		// sqrt will be imaginary, therefore no solutions
+		return false;
+	}
+
+	// if we got here, there are 2 solutions: one high-angle and one low-angle.
+
+	const float SqrtPart = FMath::Sqrt(InsideTheSqrt);
+
+	// this is the tangent of the firing angle for the first (+) solution
+	const float TanSolutionAngleA = (TossSpeedSq + SqrtPart) / (GravityZ * DeltaXY);
+	// this is the tangent of the firing angle for the second (-) solution
+	const float TanSolutionAngleB = (TossSpeedSq - SqrtPart) / (GravityZ * DeltaXY);
+
+	// mag in the XY dir = sqrt( TossSpeedSq / (TanSolutionAngle^2 + 1) );
+	const float MagXYSq_A = TossSpeedSq / (FMath::Square(TanSolutionAngleA) + 1.f);
+	const float MagXYSq_B = TossSpeedSq / (FMath::Square(TanSolutionAngleB) + 1.f);
+
+	bool bFoundAValidSolution = false;
+
+	// trace if desired
+	
+	// choose which arc
+	const float FavoredMagXYSq = bFavorHighArc ? FMath::Min(MagXYSq_A, MagXYSq_B) : FMath::Max(MagXYSq_A, MagXYSq_B);
+	const float ZSign = bFavorHighArc ?
+		(MagXYSq_A < MagXYSq_B) ? FMath::Sign(TanSolutionAngleA) : FMath::Sign(TanSolutionAngleB) :
+		(MagXYSq_A > MagXYSq_B) ? FMath::Sign(TanSolutionAngleA) : FMath::Sign(TanSolutionAngleB);
+
+	// finish calculations
+	const float MagXY = FMath::Sqrt(FavoredMagXYSq);
+	const float MagZ = FMath::Sqrt(TossSpeedSq - FavoredMagXYSq);		// pythagorean
+
+	// final answer!
+	OutTossVelocity = (DirXY * MagXY) + (FVector::UpVector * MagZ * ZSign);
+	bFoundAValidSolution = true;
+
+	return bFoundAValidSolution;
+	
+}
 
 FVector UFPSPlayerFireComponent::CalculateFireDirection(FVector start, FVector end, float speed)
 {

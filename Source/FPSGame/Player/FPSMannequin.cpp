@@ -41,7 +41,6 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 
 	GetCapsuleComponent()->SetCapsuleRadius(15);
 
-	USceneComponent* RefMesh = Cast<USceneComponent>(GetMesh());
 	CameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraArm"));
 	CameraArm->SetupAttachment(GetMesh());
 	CameraArm->RelativeRotation = FRotator(0, 90, 0);
@@ -59,6 +58,9 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 
 	StoneSpawnPoint = ObjectInitializer.CreateDefaultSubobject<UArrowComponent>(this, TEXT("ArrowPoint"));
 	StoneSpawnPoint->SetupAttachment(GetMesh());
+	StoneSpawnPoint->RelativeLocation = FVector(-59, 49, 150);
+	StoneSpawnPoint->RelativeRotation = FRotator(0, 0, 90);
+	StoneSpawnPoint->SetIsReplicated(true);
 	
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -70,6 +72,7 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 
 	bReplicates = true;
 	bReplicateMovement = true;
+
 
 }
 
@@ -88,10 +91,14 @@ void AFPSMannequin::ServerCrouch_Implementation(bool UpdateCrouch)
 	}
 }
 
+
+
 bool AFPSMannequin::ServerCrouch_Validate(bool UpdateCrouch)
 {
 	return true;
 }
+
+
 
 void AFPSMannequin::PlayFightAnim(EFightState State)
 {
@@ -102,25 +109,31 @@ void AFPSMannequin::PlayFightAnim(EFightState State)
 		switch (State)
 		{
 		case EFightState::Aim:
-			bAiming = true;
 			// As RPC is executed on Server and
 			// As RPC is also called from HostPlayer and what Server Know is also is known HostPlayer
 			// We need not PlayAnimMontage() is Executed two times for HostPlayer
 			if(Role < ROLE_Authority)
 				PlayAnimMontage(FightAnimMontage, 1.f, "StartThrow");
+			// This executed only server not Client 
 			SR_FightAnim(FName("StartThrow"), true);
 			LOG_S(FString("From Server To Client"));
 			break;
 		case EFightState::UndoAim:
-			bAiming = false;
 			if (Role < ROLE_Authority)
 				PlayAnimMontage(FightAnimMontage, 1.f, "UndoThrow");
 			SR_FightAnim(FName("UndoThrow"), false);
 			break;
 		case EFightState::Fire:
-			bAiming = false;
+
+			if (!bAiming)
+			{
+				ClientRandomFireRotate = true;
+				FRotator CroshairRotation = GetControlRotation();
+				SR_RotateCroshairDirection(CroshairRotation);
+			}
+
 			if (Role < ROLE_Authority)
-				PlayAnimMontage(FightAnimMontage, 1.5f, "Throw");
+				PlayAnimMontage(FightAnimMontage, FireAnimPlayRate, "Throw");
 			SR_FightAnim(FName("Throw"), false);
 			//Fire();
 			break;
@@ -133,6 +146,25 @@ void AFPSMannequin::PlayFightAnim(EFightState State)
 	}
 }
 
+
+
+void AFPSMannequin::SR_RotateCroshairDirection_Implementation(FRotator Direction)
+{
+	/*RandomPointRotation = Direction;*/
+	RandomPointRotation = Direction;
+	SetActorRotation(Direction);
+	//RandomPointRotation = Direction;
+	LOG_S(FString::Printf(TEXT("RRR Server Rotation = %s"), *Direction.ToString()));
+}
+
+bool AFPSMannequin::SR_RotateCroshairDirection_Validate(FRotator Direction)
+{
+	return true;
+}
+
+
+
+
 void AFPSMannequin::SR_FightAnim_Implementation(const FName& SlotName, bool bEnabelPlayerYaw)
 {
 	/// RPC is also executed for HostPlayer
@@ -141,9 +173,9 @@ void AFPSMannequin::SR_FightAnim_Implementation(const FName& SlotName, bool bEna
 		LOG_S(FString("Server Executed"));
 	}
 	bUseControllerRotationYaw = bEnabelPlayerYaw;
-	PlayAnimMontage(FightAnimMontage, 1.5f, SlotName);
+	PlayAnimMontage(FightAnimMontage, FireAnimPlayRate, SlotName);
 
-	/// Multicast Replicated the Animation for all Client
+	/// Multi cast Replicated the Animation for all Client
 	MC_FightAnim(SlotName);
 	//LOG_S(FString("Server Executed"));
 }
@@ -154,59 +186,133 @@ bool AFPSMannequin::SR_FightAnim_Validate(const FName& SlotName, bool bEnabelPla
 	return true;
 }
 
+
+
 void AFPSMannequin::MC_FightAnim_Implementation(const FName& SlotName)
 {
 	
 	if (!IsLocallyControlled())
 	{
 		LOG_S(FString("NetMulticast Executed"));
-		PlayAnimMontage(FightAnimMontage, 1.f, SlotName);
+		PlayAnimMontage(FightAnimMontage, FireAnimPlayRate, SlotName);
 	}
 		
 }
 
 
 
+void AFPSMannequin::SetPermissionAiming(bool val)
+{
+	SR_UpdateAiming(val);
+	bAiming = val; 
+	LOG_S(FString::Printf(TEXT("Aiming Val = %i"), bAiming));
+
+}
+
+void AFPSMannequin::SR_UpdateAiming_Implementation(bool val)
+{
+	bAiming = val;
+}
+
+bool AFPSMannequin::SR_UpdateAiming_Validate(bool val)
+{
+	// TODO more clear
+	return true;
+}
+
 void AFPSMannequin::Fire()
 {
+	if (Role == ROLE_Authority)
+	{
+		LOG_S(FString::Printf(TEXT("PermisionAiming Server = %i"), bAiming));
+	}
+	else
+	{
+		LOG_S(FString::Printf(TEXT("PermisionAiming Client = %i"), bAiming));
+	}
+
+	SR_Fire();
+
+}
+
+
+
+void AFPSMannequin::SR_Fire_Implementation()
+{
+
 	if (StoneBlueprinClass)
 	{
-	
-		// FVector StoneLocation = GetMesh()->GetSocketLocation("StoneStartPoint"); -- 
-		   // In Socket location case Stone spawn and SuggestProjectileVelocity() not work properly
-		   // Fire location don't match Aim location
 
-		FVector StoneLocation = StoneSpawnPoint->GetComponentLocation();
-		FVector EndLocation = MannequinAimingComponent->GetLineTraceEndPoint();
-		float Speed = MannequinAimingComponent->GetLineTraceLength() / 2;
-		
+		FVector StoneSpawnLocation;
+		FVector StoneEndLocation;
+		float StoneSpeed;
+		FRotator StoneRotation;
+		LOG_S(FString("SR_Fire_Implementation"));
+		if (bAiming)
+		{
+			// FVector StoneLocation = GetMesh()->GetSocketLocation("StoneStartPoint"); -- 
+				// In Socket location case Stone spawn and SuggestProjectileVelocity() not work properly
+				// Fire location don't match Aim location
+
+			/// Get Location & Speed
+			StoneSpawnLocation = StoneSpawnPoint->GetComponentLocation();
+			StoneEndLocation = MannequinAimingComponent->GetLineTraceEndPoint();
+			StoneSpeed = MannequinAimingComponent->GetLineTraceLength() / 2;
+			LOG_S(FString("TTT SR_Fire_Implementation"));
+			LOG_S(FString::Printf(TEXT("TTT PermisionAiming StoneSpawnLocation = %s"), *StoneSpawnLocation.ToString()));
+			LOG_S(FString::Printf(TEXT("TTT PermisionAiming StoneEndLocation = %s"), *StoneEndLocation.ToString()));
+			LOG_S(FString::Printf(TEXT("TTT PermisionAiming Speed = %f"), StoneSpeed));
+			
+
+			/// SugestProjectileVelocity
+			FVector DirectionLocation = MannequinFireComponent->GetFireDirection(StoneSpawnLocation, StoneEndLocation, StoneSpeed);
+			LOG_S(FString::Printf(TEXT("TTT PermisionAiming DirectionLocation = %s"), *DirectionLocation.ToString()));
+			LOG_S(FString("TTT ======================================================= "));
+			/// Spread of Stone
+			float HalfRad = FMath::DegreesToRadians(BulletSpread);
+			DirectionLocation = FMath::VRandCone(DirectionLocation, HalfRad, HalfRad);
+
+			/// Get Stone Direction
+			FVector NormalLocation = DirectionLocation.GetSafeNormal();
+			StoneRotation = NormalLocation.Rotation();
 
 
-		/// SugestProjectileVelocity
-		FVector DirectionLocation = MannequinFireComponent->GetFireDirection(StoneLocation, EndLocation, Speed);
-		LOG_S(FString::Printf(TEXT("FFF NormalRotation = %s"), *DirectionLocation.GetSafeNormal().Rotation().ToString()));
-		float HalfRad = FMath::DegreesToRadians(BulletSpread);
-		DirectionLocation = FMath::VRandCone(DirectionLocation, HalfRad, HalfRad);
+			LOG_S(FString::Printf(TEXT("FFF PermisionAiming StoneRotation = %s"), *StoneRotation.ToString()));
+			LOG_S(FString::Printf(TEXT("FFF PermisionAiming Speed = %f"), StoneSpeed));
 
-		FVector NormalLocation = DirectionLocation.GetSafeNormal();
-		FRotator NormalRotation = NormalLocation.Rotation();
-		
-		//NormalRotation.Yaw += 10.f;
-			/// Spread Bullet
+			
+			LOG_S(FString("PermisionAiming Spawn_AimPoint"));
+			if (Role == ROLE_Authority)
+			{
+				LOG_S(FString("FFF PermisionAiming Server"));
+			}
+			if (Role == ROLE_AutonomousProxy)
+			{
+				LOG_S(FString("FFF PermisionAiming Client"));
+			}
 
-		//FRotator NormalRotation = NormalLocation.Rotation();
+			LOG_S(FString("AAA Fire_ Aiming"));
+			
+		}
+		else
+		{
+			StoneSpawnLocation = StoneSpawnPoint->GetComponentLocation();
+			float PitchVal = FMath::RandRange(1.f, 3.f);
+			StoneRotation = FRotator(PitchVal, GetActorRotation().Yaw, 0);
 
-		LOG_S(FString::Printf(TEXT("FFF NormalRotation = %s"), *NormalRotation.ToString()));
-		LOG_S(FString::Printf(TEXT("FFF Speed = %f"), Speed));
-		
+			float speedrange = FMath::RandRange(2.f, 4.f);
+			StoneSpeed = MannequinAimingComponent->GetLineTraceLength() / speedrange;
+			LOG_S(FString("AAA Fire_ Random"));
+		}
 
 		//Set Spawn Collision Handling Override
 		FActorSpawnParameters ActorSpawnParams;
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 		ActorSpawnParams.Instigator = this;
-
-		AFPSStone* Stone = GetWorld()->SpawnActor<AFPSStone>(StoneBlueprinClass, StoneLocation, NormalRotation /*ActorSpawnParams*/);
-
+		
+		AFPSStone* Stone = GetWorld()->SpawnActor<AFPSStone>(StoneBlueprinClass, StoneSpawnLocation, StoneRotation /*ActorSpawnParams*/);
+		Stone->LaunchStone(StoneSpeed);
+		
 
 		DrawDebugLine(
 			GetWorld(),
@@ -219,11 +325,17 @@ void AFPSMannequin::Fire()
 			5.f
 		);
 
-		Stone->LaunchStone(Speed);
-		LOG_S(FString("ProjectileStone"));
+	
 	}
-
 }
+
+
+bool AFPSMannequin::SR_Fire_Validate()
+{
+	return true;
+}
+
+
 
 
 
@@ -236,9 +348,17 @@ AFPSPlayerController* AFPSMannequin::GetSelfController()
 void AFPSMannequin::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//LOG_F(GetCapsuleComponent()->GetScaledCapsuleRadius());
-
+	if (Role == ROLE_Authority)
+		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Server"), nullptr, FColor::Red, 10.f);
+	if (Role == ROLE_AutonomousProxy)
+		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Client"), nullptr, FColor::Yellow, 10.f);
+	//if (HasAuthority())
+	{
+		OwnController = GetSelfController();
+		if (!OwnController) return;
+		BulletSpread = OwnController->GetMaxAimPrecision() - OwnFeatures.AimPrecision;
+		//LOG_S(FString("OwnController is not NULL"));
+	}
 }
 
 // Called every frame
@@ -246,6 +366,13 @@ void AFPSMannequin::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	//LOG_F(GetCharacterMovement()->GetMaxSpeed());
+
+	//LOG_S(FString::Printf(TEXT("PermisionAiming = %i"), bAiming));
+
+	if (Role == ROLE_AutonomousProxy && ClientRandomFireRotate)
+	{
+		SetActorRotation(RandomPointRotation);
+	}
 }
 
 
@@ -255,7 +382,10 @@ void AFPSMannequin::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 	DOREPLIFETIME(AFPSMannequin, bCrouch);
 	DOREPLIFETIME(AFPSMannequin, bMoving);
+	DOREPLIFETIME(AFPSMannequin, bAiming);
 	DOREPLIFETIME(AFPSMannequin, FightAnimMontage);
+	DOREPLIFETIME(AFPSMannequin, FireAnimPlayRate);
+	DOREPLIFETIME(AFPSMannequin, RandomPointRotation);
 
 }
 

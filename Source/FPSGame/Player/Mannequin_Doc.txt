@@ -1,0 +1,30 @@
+/* Fire */
+Fire Function is Locally BlueprintCallable funtion, which is called from AnimBlueprint, because Stone spawn and movement is executed in certain time of Animation sequance
+but befor call Fire function must be checked, it executed for LocallyController. otherwise it will be executed twice for Client
+
+/* Replication Fire Anim */
+for fire Animation we use RPC and Multicas. RPC need to run Animation in Server side. Multicas need to run Animation every Client beind LocallyController, 
+we need Multicast for SimulatedProxy.
+For LocallyController we Use Locally Function to run fire Animation
+we use such one by one Execution because AnimMontage can't be Replicated as simple variable
+
+Befor Fire Anim we need to update server Aiming variable. It must be happened befor Fire Anim executed, outcome this for Aiming Var we use seperate RPC.
+we update Aiming Var locally and then in Server side.
+
+/* Stone Replication */
+Stone Object Player spawn only in Server and in terms of that Stone object is Replicated it also appear for all Client
+Main thing here is: Stone movement Endlocation is calculate in LineTrace() Functino in FPSPlayerAiming class. Endlocation is membar var of FPSPlayerAiming class
+and if it is not Replicated var Client and Server side Endlocation does not match echother.
+
+/* Two Version of Fire */
+We calculate two version of Fire Aiming Fire and Random fire and this Execution is depened on Anim Var.
+for Aiming Fire version we use LineTrace() and SuggestPorjectily() to calculate Stone trajectory.
+
+But for Random Fire version we not calculate any trajectory. Simple throw the Stone.
+but I want the throw direction will be same as Camera looking direction and it's required Actor Rotation in same direction as Camera looking at
+but Actor Rotation in Server and Client side is not Simple thing
+For HostPlayer it's executed OK, But for Client is not.
+Client Rotation in Camera looking Direction is executed in Server side but not Client side
+(because Rotation first is executed in Client side therefor client translation and server translation is not match eachother. such case Server win, Client doesn't rotate.
+then by the RPC Rotation is executed in server side Clinet's Copy in server side is rotated and result locally Client rotation is not changed) I use RPC, ReplicatedUsing but nothing worked
+At last I use Tick() function because after RPC Tick() must correct difference in Rotation in Clinet side.

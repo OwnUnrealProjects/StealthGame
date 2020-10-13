@@ -28,6 +28,7 @@ protected:
 public:	
 
 	FVector GetFireDirection(FVector start, FVector end, float speed);
+	bool SuggestStoneVelocity(FVector& OutTossVelocity, FVector Start, FVector End, float TossSpeed, bool bFavorHighArc);
 
 	FVector CalculateFireDirection(FVector start, FVector end, float speed);
 	

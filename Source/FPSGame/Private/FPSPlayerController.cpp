@@ -12,6 +12,8 @@
 AFPSPlayerController::AFPSPlayerController()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	MaxAimPrecision = 10.f;
 }
 
 

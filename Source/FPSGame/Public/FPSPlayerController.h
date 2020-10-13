@@ -44,6 +44,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Player Name")
 	FString GetPlayerName() { return CharacterName; }
 
+	float GetMaxAimPrecision() { return MaxAimPrecision; }
+
 protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Possess, BlueprintReadWrite, Category = "Possess Pawn")
@@ -59,5 +61,5 @@ private:
 	enum ENetRole OwnerPlayerRole = ENetRole::ROLE_None;
 	enum ENetRole OwnerPlayerRemotRole = ENetRole::ROLE_None;
 	
-	
+	float MaxAimPrecision;
 };

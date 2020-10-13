@@ -75,124 +75,143 @@ private:
 
 	FString GetEnumText(ENetRole Role);
 
-protected:
-	
-	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraSeat")
-	USceneComponent* CameraSeat;*/
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraArm")
-	USpringArmComponent* CameraArm;
-
-
-	/** First person camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	UCameraComponent* CameraComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Aiming")
-	UArrowComponent* StoneSpawnPoint;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-	UPawnNoiseEmitterComponent* NoiseEmitterComp;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	UFPSPlayerInput* MannequinInputComponent;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	UFPSPlayerAiming* MannequinAimingComponent;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	UFPSPlayerFireComponent* MannequinFireComponent;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Feature")
-	FCharcterFeature OwnFeatures;
-
-
-
-
-	UPROPERTY(BlueprintReadWrite, Category = "CaracterMovement")
-	float DefaultMaxSpeed;
-	UPROPERTY(BlueprintReadWrite, Category = "CaracterMovement")
-	float DefaultCrouchSpeed;
-
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "CharacterAnim")
-	bool bMoving;
-	UPROPERTY(Replicated, BlueprintReadWrite, Category = "CharacterAnim")
-	bool bCrouch;
-
-	UPROPERTY(BlueprintReadOnly, Category = "CharacterAnim")
-	bool bAiming;
-	UPROPERTY(BlueprintReadOnly, Category = "CharacterAnim")
-	bool bFire;
-
-
-	/// Fire Multiplayer
-	/** AnimMontage to play each time we fire */
-	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Gameplay")
-	UAnimMontage* FightAnimMontage;
-
-
-
-	//Projectile
-	/** Projectile class to spawn */
-	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-	TSubclassOf<AFPSStone> StoneBlueprinClass;
-	float BulletSpread = 5.f;
+	AFPSPlayerController* OwnController;
 
 protected:
 	
-	// RPC is also called from HostPlayer
-	UFUNCTION(Server, Reliable, WithValidation)
-	void SR_FightAnim(const FName& SlotName, bool bEnabelPlayerYaw);
+	/// Pawn Consistence Part
+		/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraSeat")
+		USceneComponent* CameraSeat;*/
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraArm")
+		USpringArmComponent* CameraArm;
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+		UCameraComponent* CameraComponent;
+		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Aiming")
+		UArrowComponent* StoneSpawnPoint;
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MC_FightAnim(const FName& SlotName);
 
+	/// Pawn Ability Components
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+		UPawnNoiseEmitterComponent* NoiseEmitterComp;
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+		UFPSPlayerInput* MannequinInputComponent;
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+		UFPSPlayerAiming* MannequinAimingComponent;
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+		UFPSPlayerFireComponent* MannequinFireComponent;
+
+
+	/// Pawn Properties
+		UPROPERTY(BlueprintReadWrite, Category = "Feature")
+		FCharcterFeature OwnFeatures;
+
+
+
+	/// Pawn Movement
+		UPROPERTY(BlueprintReadWrite, Category = "CaracterMovement")
+		float DefaultMaxSpeed;
+		UPROPERTY(BlueprintReadWrite, Category = "CaracterMovement")
+		float DefaultCrouchSpeed;
+		UPROPERTY(Replicated, BlueprintReadOnly, Category = "CharacterAnim")
+		bool bMoving;
+		UPROPERTY(Replicated, BlueprintReadWrite, Category = "CharacterAnim")
+		bool bCrouch;
+
+	/// FIRE
+		// Fire AimPoint & Fire Animation
+		UPROPERTY(Replicated, EditDefaultsOnly, Category = "Gameplay")
+		UAnimMontage* FightAnimMontage;
+		UPROPERTY(BlueprintReadOnly, Category = "CharacterAnim")
+		bool bFire;
+		UPROPERTY(Replicated)
+		float FireAnimPlayRate = 1.5f;
+
+		// Fire Random Point
+		UPROPERTY(Replicated, BlueprintReadOnly, Category = "CharacterAnim")
+		bool bAiming;
+		bool ClientRandomFireRotate;
+		UPROPERTY(Replicated)
+		FRotator RandomPointRotation;
+	
+
+
+		//Projectile
+		/** Projectile class to spawn */
+		UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+		TSubclassOf<AFPSStone> StoneBlueprinClass;
+		float BulletSpread;
+
+protected:
+	
+/// Replication
+
+	/// FIRE 
 	UFUNCTION(BlueprintCallable, Category = "Fire")
 	void Fire();
 
+		// RPC is also called from HostPlayer
+		UFUNCTION(Server, Reliable, WithValidation)
+		void SR_FightAnim(const FName& SlotName, bool bEnabelPlayerYaw);
 
-public:
-	
-	UFUNCTION(BlueprintPure, Category = "CharacterAnim")
-	bool GetPermissionCrouch() { return bCrouch; }
-	void SetPermissionCrouch(bool val) { bCrouch = val; }
+		UFUNCTION(NetMulticast, Reliable)
+		void MC_FightAnim(const FName& SlotName);
 
-	UFUNCTION(BlueprintPure, Category = "CharacterAnim")
-	bool GetPermissionMoving() { return bMoving; }
-	UFUNCTION(BlueprintCallable, Category = "CharacterAnim")
-	void SetPermissionMoving(bool val) { bMoving = val; }
+		UFUNCTION(Server, Reliable, WithValidation)
+		void SR_UpdateAiming(bool val);
 
-	UFUNCTION(BlueprintPure, Category = "CharacterAnim")
-	bool GetPermissionAiming() { return bAiming; }
-	UFUNCTION(BlueprintCallable, Category = "CharacterAnim")
-	void SetPermissionAiming(bool val) { bAiming = val; }
+		UFUNCTION(Server, Reliable, WithValidation)
+		void SR_Fire();
 
-	UFUNCTION(BlueprintPure, Category = "CharacterAnim")
-	bool GetPermissionFire() { return bFire; }
-	UFUNCTION(BlueprintCallable, Category = "CharacterAnim")
-	void SetPermissionFire(bool val) { bFire = val; }
+		UFUNCTION(Server,Reliable,WithValidation)
+		void SR_RotateCroshairDirection(FRotator Direction);
 
-
-	bool IsFightAnimation() { return FightAnimMontage ? true : false; }
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerCrouch(bool UpdateCrouch);
-
-	float GetDefalutMaxSpeed() { return DefaultMaxSpeed; }
-	float GetDefaultCrouchSpeed() { return DefaultCrouchSpeed; }
-
-	void PlayFightAnim(EFightState State);
 
 
 public:
 	
-	//USceneComponent* GetCameraSeatComponent() const { return CameraSeat; }
-	USpringArmComponent* GetCameraArmComponent() const { return CameraArm; }
-	UCameraComponent* GetCameraComponent() const { return CameraComponent; }
+	/// Permissions
+		// Geter and Seter of Permisions
+		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
+		bool GetPermissionCrouch() { return bCrouch; }
+		void SetPermissionCrouch(bool val) { bCrouch = val; }
 
-	UFUNCTION(BlueprintPure, Category = "Feature")
-	FCharcterFeature GetOwnFeature() { return OwnFeatures; }
+		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
+		bool GetPermissionMoving() { return bMoving; }
+		UFUNCTION(BlueprintCallable, Category = "CharacterAnim")
+		void SetPermissionMoving(bool val) { bMoving = val; }
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "ChracterAnim")
-	void CanCrouched(bool Enable);
+		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
+		bool GetPermissionAiming() { return bAiming; }
+		UFUNCTION(BlueprintCallable, Category = "CharacterAnim")
+		void SetPermissionAiming(bool val);
+
+		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
+		bool GetPermissionFire() { return bFire; }
+		UFUNCTION(BlueprintCallable, Category = "CharacterAnim")
+		void SetPermissionFire(bool val) { bFire = val; }
+
+	/// We use it in FPSPlayerInput Class
+		bool IsFightAnimation() { return FightAnimMontage ? true : false; }
+
+		UFUNCTION(Server, Reliable, WithValidation)
+		void ServerCrouch(bool UpdateCrouch);
+
+		float GetDefalutMaxSpeed() { return DefaultMaxSpeed; }
+		float GetDefaultCrouchSpeed() { return DefaultCrouchSpeed; }
+
+		void PlayFightAnim(EFightState State);
+
+		USpringArmComponent* GetCameraArmComponent() const { return CameraArm; }
+
+	/// We use it in FPSPlayerAiming Class
+		UCameraComponent* GetCameraComponent() const { return CameraComponent; }
+	
+	/// Blueprint Functions
+		UFUNCTION(BlueprintPure, Category = "Feature")
+		FCharcterFeature GetOwnFeature() { return OwnFeatures; }
+
+		UFUNCTION(BlueprintImplementableEvent, Category = "ChracterAnim")
+		void CanCrouched(bool Enable);
 
 	AFPSPlayerController* GetSelfController();
 
