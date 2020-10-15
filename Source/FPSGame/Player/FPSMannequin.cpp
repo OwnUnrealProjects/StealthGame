@@ -40,6 +40,7 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 	//AimTraceName = "AimBeamEnd";
 
 	GetCapsuleComponent()->SetCapsuleRadius(15);
+	GetMesh()->RelativeLocation = FVector(0, 0, -90);
 
 	CameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraArm"));
 	CameraArm->SetupAttachment(GetMesh());
@@ -78,17 +79,94 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 
 
 
-void AFPSMannequin::ServerCrouch_Implementation(bool UpdateCrouch)
+// Called when the game starts or when spawned
+void AFPSMannequin::BeginPlay()
 {
-	bCrouch = UpdateCrouch;
-	if (UpdateCrouch)
+	Super::BeginPlay();
+	if (Role == ROLE_Authority)
+		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Server"), nullptr, FColor::Red, 10.f);
+	if (Role == ROLE_AutonomousProxy)
+		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Client"), nullptr, FColor::Yellow, 10.f);
+	//if (HasAuthority())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = DefaultCrouchSpeed;
+		OwnController = GetSelfController();
+		if (!OwnController) return;
+		BulletSpread = OwnController->GetMaxAimPrecision() - OwnFeatures.AimPrecision;
+		//LOG_S(FString("OwnController is not NULL"));
+	}
+}
+
+
+
+// Called every frame
+void AFPSMannequin::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	//LOG_F(GetCharacterMovement()->GetMaxSpeed());
+
+	//LOG_S(FString::Printf(TEXT("PermisionAiming = %i"), bAiming));
+
+	if (Role == ROLE_AutonomousProxy && ClientRandomFireRotate)
+	{
+		SetActorRotation(RandomPointRotation);
+	}
+}
+
+
+
+void AFPSMannequin::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AFPSMannequin, bCrouch);
+	DOREPLIFETIME(AFPSMannequin, bMoving);
+	DOREPLIFETIME(AFPSMannequin, bAiming);
+	DOREPLIFETIME(AFPSMannequin, FightAnimMontage);
+	DOREPLIFETIME(AFPSMannequin, FireAnimPlayRate);
+	DOREPLIFETIME(AFPSMannequin, RandomPointRotation);
+
+}
+
+
+
+// Called to bind functionality to input
+void AFPSMannequin::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+
+	if (IsLocallyControlled())
+	{
+		MannequinInputComponent->SetupInputComponent(PlayerInputComponent);
+		//LOG_S(FString("SetupInput -- MovementInput..........................."));
+	}
+
+}
+
+
+
+
+void AFPSMannequin::SetPermissionCrouch(bool val)
+{
+	if(Role < ROLE_Authority)
+		ServerCrouch(val);
+
+	bCrouch = val;
+	if (val)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = GetDefaultCrouchSpeed();
 	}
 	else
 	{
-		GetCharacterMovement()->MaxWalkSpeed = DefaultMaxSpeed;
+		GetCharacterMovement()->MaxWalkSpeed = GetDefalutMaxSpeed();
 	}
+
+}
+
+
+void AFPSMannequin::ServerCrouch_Implementation(bool UpdateCrouch)
+{
+	SetPermissionCrouch(UpdateCrouch);
 }
 
 
@@ -344,64 +422,7 @@ AFPSPlayerController* AFPSMannequin::GetSelfController()
 	return Cast<AFPSPlayerController>(GetController());
 }
 
-// Called when the game starts or when spawned
-void AFPSMannequin::BeginPlay()
-{
-	Super::BeginPlay();
-	if (Role == ROLE_Authority)
-		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Server"), nullptr, FColor::Red, 10.f);
-	if (Role == ROLE_AutonomousProxy)
-		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Client"), nullptr, FColor::Yellow, 10.f);
-	//if (HasAuthority())
-	{
-		OwnController = GetSelfController();
-		if (!OwnController) return;
-		BulletSpread = OwnController->GetMaxAimPrecision() - OwnFeatures.AimPrecision;
-		//LOG_S(FString("OwnController is not NULL"));
-	}
-}
-
-// Called every frame
-void AFPSMannequin::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-	//LOG_F(GetCharacterMovement()->GetMaxSpeed());
-
-	//LOG_S(FString::Printf(TEXT("PermisionAiming = %i"), bAiming));
-
-	if (Role == ROLE_AutonomousProxy && ClientRandomFireRotate)
-	{
-		SetActorRotation(RandomPointRotation);
-	}
-}
 
 
-void AFPSMannequin::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(AFPSMannequin, bCrouch);
-	DOREPLIFETIME(AFPSMannequin, bMoving);
-	DOREPLIFETIME(AFPSMannequin, bAiming);
-	DOREPLIFETIME(AFPSMannequin, FightAnimMontage);
-	DOREPLIFETIME(AFPSMannequin, FireAnimPlayRate);
-	DOREPLIFETIME(AFPSMannequin, RandomPointRotation);
-
-}
-
-
-// Called to bind functionality to input
-void AFPSMannequin::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-
-	if (IsLocallyControlled())
-	{
-		MannequinInputComponent->SetupInputComponent(PlayerInputComponent);
-		//LOG_S(FString("SetupInput -- MovementInput..........................."));
-	}
-	
-}
 
 

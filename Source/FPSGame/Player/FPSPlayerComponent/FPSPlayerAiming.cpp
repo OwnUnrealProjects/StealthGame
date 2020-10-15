@@ -35,7 +35,6 @@ UFPSPlayerAiming::UFPSPlayerAiming()
 	PrimaryComponentTick.bCanEverTick = true;
 	//SetIsReplicated(true);
 
-	BulletSpread = 2.f;
 	AimTraceName = "AimBeamEnd";
 	S_Tangent = "Source_Tangent";
 	T_Tangent = "Target_Tangent";
@@ -101,7 +100,7 @@ void UFPSPlayerAiming::AimPoint(float ParticleTangent)
 	{
 		LineTracePoint = Hit.Location;
 		SR_UpdateLineTracePoint(Hit.Location);
-		LOG_S(FString::Printf(TEXT("LTSC Hit = %s"), *Hit.GetActor()->GetName()));
+		//LOG_S(FString::Printf(TEXT("LTSC Hit = %s"), *Hit.GetActor()->GetName()));
 	}
 	else
 	{

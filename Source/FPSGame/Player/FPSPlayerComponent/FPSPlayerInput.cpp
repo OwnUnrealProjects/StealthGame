@@ -196,7 +196,6 @@ void UFPSPlayerInput::Crouch()
 	//Player->CanCrouched(true);
 	Player->bIsCrouched = true;
 	Player->SetPermissionCrouch(true);
-	Player->ServerCrouch(true);
 }
 
 void UFPSPlayerInput::UnCrouch()
@@ -205,7 +204,6 @@ void UFPSPlayerInput::UnCrouch()
 	//Player->CanCrouched(false);
 	Player->bIsCrouched = false;
 	Player->SetPermissionCrouch(false);
-	Player->ServerCrouch(false);
 }
 
 void UFPSPlayerInput::StartAiming()

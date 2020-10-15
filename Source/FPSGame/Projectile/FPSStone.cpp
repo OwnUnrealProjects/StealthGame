@@ -59,7 +59,7 @@ void AFPSStone::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimiti
 
 	}
 
-	LOG_S(FString::Printf(TEXT("SSS Hit Actor = %s"), *OtherActor->GetName()));
+	//LOG_S(FString::Printf(TEXT("SSS Hit Actor = %s"), *OtherActor->GetName()));
 	DrawDebugSphere(GetWorld(), GetActorLocation(), 25, 12, FColor::Green, false, 10.f, 0, 1.f);
 
 	//if (Role == ROLE_Authority)

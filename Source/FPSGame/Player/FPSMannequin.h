@@ -101,17 +101,17 @@ protected:
 		UFPSPlayerFireComponent* MannequinFireComponent;
 
 
-	/// Pawn Properties
+	/// Pawn Properties. I Set it in Blueprint
 		UPROPERTY(BlueprintReadWrite, Category = "Feature")
 		FCharcterFeature OwnFeatures;
 
 
 
 	/// Pawn Movement
-		UPROPERTY(BlueprintReadWrite, Category = "CaracterMovement")
+		/*UPROPERTY(BlueprintReadWrite, Category = "CaracterMovement")
 		float DefaultMaxSpeed;
 		UPROPERTY(BlueprintReadWrite, Category = "CaracterMovement")
-		float DefaultCrouchSpeed;
+		float DefaultCrouchSpeed;*/
 		UPROPERTY(Replicated, BlueprintReadOnly, Category = "CharacterAnim")
 		bool bMoving;
 		UPROPERTY(Replicated, BlueprintReadWrite, Category = "CharacterAnim")
@@ -139,6 +139,7 @@ protected:
 		/** Projectile class to spawn */
 		UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 		TSubclassOf<AFPSStone> StoneBlueprinClass;
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
 		float BulletSpread;
 
 protected:
@@ -170,10 +171,10 @@ protected:
 public:
 	
 	/// Permissions
-		// Geter and Seter of Permisions
+		// Geter and Seter of Permissions
 		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
 		bool GetPermissionCrouch() { return bCrouch; }
-		void SetPermissionCrouch(bool val) { bCrouch = val; }
+		void SetPermissionCrouch(bool val);
 
 		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
 		bool GetPermissionMoving() { return bMoving; }
@@ -196,8 +197,8 @@ public:
 		UFUNCTION(Server, Reliable, WithValidation)
 		void ServerCrouch(bool UpdateCrouch);
 
-		float GetDefalutMaxSpeed() { return DefaultMaxSpeed; }
-		float GetDefaultCrouchSpeed() { return DefaultCrouchSpeed; }
+		float GetDefalutMaxSpeed() { return OwnFeatures.MaxSpeed; }
+		float GetDefaultCrouchSpeed() { return OwnFeatures.CrouchSpeed; }
 
 		void PlayFightAnim(EFightState State);
 

@@ -34,11 +34,8 @@ private:
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, Category = "Aiming", meta = (ClampMin = 0.f))
-	float BulletSpread;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Aiming", meta = (ClampMin = 5000.f, ClampMax = 10000.f))
-	float LineTraceLength = 5000;
+	UPROPERTY(EditDefaultsOnly, Category = "Aiming", meta = (ClampMin = 5000.f, ClampMax = 15000.f))
+	float LineTraceLength;
 
 	UPROPERTY(Replicated)
 	FVector LineTracePoint;
