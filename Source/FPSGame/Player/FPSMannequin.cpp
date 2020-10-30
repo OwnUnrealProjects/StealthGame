@@ -65,7 +65,9 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 	
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
+
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+	//GetCharacterMovement()->MaxWalkSpeed = OwnFeatures.MaxSpeed;
 
 	MannequinAimingComponent = CreateDefaultSubobject<UFPSPlayerAiming>(TEXT("MannequinAimingComonent"));
 	MannequinInputComponent = CreateDefaultSubobject<UFPSPlayerInput>(TEXT("MannequinInputComonent"));
@@ -113,6 +115,14 @@ void AFPSMannequin::Tick(float DeltaTime)
 }
 
 
+
+void AFPSMannequin::UnPossessed()
+{
+	Super::UnPossessed();
+
+	Destroy(true, true);
+	UE_LOG(LogTemp, Warning, TEXT("UNPOSSESSED function"));
+}
 
 void AFPSMannequin::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

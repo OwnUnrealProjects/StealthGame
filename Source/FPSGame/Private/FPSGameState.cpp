@@ -88,21 +88,24 @@ void AFPSGameState::MultiCastOnMissionComplite_Implementation(AActor *CameraNewT
 void AFPSGameState::MissionFailed_Implementation(AActor * CameraNewTarget, APawn * InstigatorPawn, bool MissionFail)
 {
 
-	auto Player = Cast<AFPSCharacter>(InstigatorPawn);
-	if (!Player) return;
+	/*auto Player = Cast<AFPSCharacter>(InstigatorPawn);
+	if (!Player) return;*/
+
+	auto Player = InstigatorPawn;
 
 	UE_LOG(LogTemp, Warning, TEXT("GameState MissionFailed Player Name = %s"), *InstigatorPawn->GetName());
 
 	AFPSPlayerController* PC = Cast<AFPSPlayerController>(Player->GetController());
+	PC->GetPawn()->DisableInput(PC);
 	if (!PC) return;
 
-	if (PC->IsLocalController())
+	/*if (PC->IsLocalController())
 	{
 		PC->SetViewTargetWithBlend(CameraNewTarget, 1.5f, EViewTargetBlendFunction::VTBlend_Cubic);
 		PC->OnMissionCompleted(false);
 		PC->GetPawn()->DisableInput(PC);
 		UE_LOG(LogTemp, Warning, TEXT("GameState Unpossesed Block"));
-	}
+	}*/
 
 	TimerDel.BindUFunction(this, FName("UnPossessedPawn"), PC);
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDel, 3.f, false);
