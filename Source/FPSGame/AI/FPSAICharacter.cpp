@@ -19,7 +19,7 @@ AFPSAICharacter::AFPSAICharacter()
 	CatchPlayerCollision->SetupAttachment(GetMesh(), TEXT("SocketCollision"));
 	CatchPlayerCollision->SetBoxExtent(FVector(20.f, 32.f, 50.f));
 	CatchPlayerCollision->SetCollisionProfileName(TEXT("AICatchPlayer"));
-	CatchPlayerCollision->OnComponentHit.AddDynamic(this, &AFPSAICharacter::HandlePlayer);
+	//CatchPlayerCollision->OnComponentHit.AddDynamic(this, &AFPSAICharacter::HandlePlayer);
 
 }
 

@@ -21,6 +21,7 @@
 #include "Components/ArrowComponent.h"
 #include "Animation/AnimMontage.h"
 #include "DrawDebugHelpers.h"
+#include "Components/PawnNoiseEmitterComponent.h"
 
 
 #define OUT
@@ -72,6 +73,8 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 	MannequinAimingComponent = CreateDefaultSubobject<UFPSPlayerAiming>(TEXT("MannequinAimingComonent"));
 	MannequinInputComponent = CreateDefaultSubobject<UFPSPlayerInput>(TEXT("MannequinInputComonent"));
 	MannequinFireComponent = CreateDefaultSubobject<UFPSPlayerFireComponent>(TEXT("MannequinFireComonent"));
+	MannequinNoiseEmitterComponent = CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("MannequinNoiseEmitterComponent"));
+
 
 	bReplicates = true;
 	bReplicateMovement = true;
@@ -94,8 +97,11 @@ void AFPSMannequin::BeginPlay()
 		OwnController = GetSelfController();
 		if (!OwnController) return;
 		BulletSpread = OwnController->GetMaxAimPrecision() - OwnFeatures.AimPrecision;
+		Loudness = OwnController->GetMaxLoud() - OwnFeatures.Smart;
 		//LOG_S(FString("OwnController is not NULL"));
 	}
+
+	bCrouch = false;
 }
 
 
@@ -115,6 +121,19 @@ void AFPSMannequin::Tick(float DeltaTime)
 }
 
 
+void AFPSMannequin::MakeNoise(bool enable)
+{
+	
+	if (enable)
+	{
+		MannequinNoiseEmitterComponent->MakeNoise(this, Loudness, GetActorLocation());
+		LOG_S(FString::Printf(TEXT("Player Noise = %f"), Loudness));
+	}
+	else
+	{
+		LOG_S(FString("Player Silence"));
+	}
+}
 
 void AFPSMannequin::UnPossessed()
 {
@@ -131,9 +150,11 @@ void AFPSMannequin::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AFPSMannequin, bCrouch);
 	DOREPLIFETIME(AFPSMannequin, bMoving);
 	DOREPLIFETIME(AFPSMannequin, bAiming);
+	DOREPLIFETIME(AFPSMannequin, Loudness);
 	DOREPLIFETIME(AFPSMannequin, FightAnimMontage);
 	DOREPLIFETIME(AFPSMannequin, FireAnimPlayRate);
 	DOREPLIFETIME(AFPSMannequin, RandomPointRotation);
+	DOREPLIFETIME(AFPSMannequin, BulletSpread);
 
 }
 
@@ -431,6 +452,7 @@ AFPSPlayerController* AFPSMannequin::GetSelfController()
 {
 	return Cast<AFPSPlayerController>(GetController());
 }
+
 
 
 

@@ -166,6 +166,16 @@ void UFPSPlayerInput::MoveForward(float Val)
 		Player->AddMovementInput(Direction, Val);
 		//Player->SetPermissionMoving(Val);
 		//LOG_S(Direction.ToString());
+
+		if (Player->GetPermissionCrouch())
+		{
+			Player->MakeNoise(false);
+		}
+		else
+		{
+			Player->MakeNoise(true);
+		}
+
 	}
 	
 
@@ -186,6 +196,15 @@ void UFPSPlayerInput::MoveRight(float Val)
 		// add movement in that direction
 		Player->AddMovementInput(Direction, Val);
 		//Player->SetPermissionMoving(Val);
+
+		if (Player->GetPermissionCrouch())
+		{
+			Player->MakeNoise(false);
+		}
+		else
+		{
+			Player->MakeNoise(true);
+		}
 	}
 	
 }

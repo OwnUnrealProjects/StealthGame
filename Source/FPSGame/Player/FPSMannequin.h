@@ -92,7 +92,7 @@ protected:
 
 	/// Pawn Ability Components
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-		UPawnNoiseEmitterComponent* NoiseEmitterComp;
+		UPawnNoiseEmitterComponent* MannequinNoiseEmitterComponent;
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 		UFPSPlayerInput* MannequinInputComponent;
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
@@ -116,6 +116,8 @@ protected:
 		bool bMoving;
 		UPROPERTY(Replicated, BlueprintReadWrite, Category = "CharacterAnim")
 		bool bCrouch;
+		UPROPERTY(Replicated, BlueprintReadWrite, Category = "AIPerception")
+		float Loudness;
 
 	/// FIRE
 		// Fire AimPoint & Fire Animation
@@ -139,7 +141,7 @@ protected:
 		/** Projectile class to spawn */
 		UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 		TSubclassOf<AFPSStone> StoneBlueprinClass;
-		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
+		UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
 		float BulletSpread;
 
 protected:
@@ -215,6 +217,9 @@ public:
 		void CanCrouched(bool Enable);
 
 	AFPSPlayerController* GetSelfController();
+
+
+	void MakeNoise(bool enable);
 
 
 

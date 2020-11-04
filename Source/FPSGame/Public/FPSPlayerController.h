@@ -45,6 +45,7 @@ public:
 	FString GetPlayerName() { return CharacterName; }
 
 	float GetMaxAimPrecision() { return MaxAimPrecision; }
+	float GetMaxLoud() { return MaxLoud; }
 
 protected:
 
@@ -62,4 +63,5 @@ private:
 	enum ENetRole OwnerPlayerRemotRole = ENetRole::ROLE_None;
 	
 	float MaxAimPrecision;
+	float MaxLoud;
 };
