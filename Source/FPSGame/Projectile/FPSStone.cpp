@@ -17,20 +17,20 @@ AFPSStone::AFPSStone()
 
 
 	// Use a sphere as a simple collision representation
-	/*CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
+	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(20.0f);
 	CollisionComp->SetCollisionProfileName("Projectile");
-	CollisionComp->OnComponentHit.AddDynamic(this, &AFPSStone::OnHit);*/	// set up a notification for when this component hits something blocking
+	CollisionComp->OnComponentHit.AddDynamic(this, &AFPSStone::OnHit);	// set up a notification for when this component hits something blocking
 
 	// Players can't walk on it
-	/*CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
-	CollisionComp->CanCharacterStepUpOn = ECB_No;*/
+	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
+	CollisionComp->CanCharacterStepUpOn = ECB_No;
 
 	// Set as root component
 	RootComponent = CollisionComp;
 
 	Stone = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Stone"));
-	RootComponent = Stone;
+	Stone->SetupAttachment(RootComponent);
 
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	StoneMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("StoneMovement"));
@@ -62,11 +62,11 @@ void AFPSStone::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimiti
 	//LOG_S(FString::Printf(TEXT("SSS Hit Actor = %s"), *OtherActor->GetName()));
 	DrawDebugSphere(GetWorld(), GetActorLocation(), 25, 12, FColor::Green, false, 10.f, 0, 1.f);
 
-	//if (Role == ROLE_Authority)
-	//{
-	//	MakeNoise(10.f, Instigator); // Instigator set Fire() function
-	//	Destroy();
-	//}
+	if (Role == ROLE_Authority)
+	{
+		MakeNoise(10.f, Instigator); // Instigator set Fire() function
+		Destroy();
+	}
 }
 
 void AFPSStone::LaunchStone(float speed)
@@ -89,7 +89,7 @@ void AFPSStone::LaunchStone(float speed)
 void AFPSStone::BeginPlay()
 {
 	Super::BeginPlay();
-	Stone->OnComponentHit.AddDynamic(this, &AFPSStone::OnHit);
+	//Stone->OnComponentHit.AddDynamic(this, &AFPSStone::OnHit);
 }
 
 // Called every frame

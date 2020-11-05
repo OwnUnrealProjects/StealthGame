@@ -12,7 +12,7 @@ UCLASS()
 class FPSGAME_API AFPSAICharacter : public ACharacter
 {
 	GENERATED_BODY()
-
+		
 public:
 	// Sets default values for this character's properties
 	AFPSAICharacter();
