@@ -40,8 +40,8 @@ AFPSStone::AFPSStone()
 	StoneMovement->InitialSpeed = 1000.f;
 	StoneMovement->MaxSpeed = 1500.f;
 	StoneMovement->bRotationFollowsVelocity = true;*/
-	//StoneMovement->bShouldBounce = true;
-	//StoneMovement->bRotationFollowsVelocity = true;
+	StoneMovement->bShouldBounce = true;
+	StoneMovement->bRotationFollowsVelocity = true;
 	// Die after 3 seconds by default
 	//InitialLifeSpan = 3.0f;
 
@@ -64,7 +64,8 @@ void AFPSStone::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimiti
 
 	if (Role == ROLE_Authority)
 	{
-		MakeNoise(10.f, Instigator); // Instigator set Fire() function
+		MakeNoise(1.f, Instigator); // Instigator set Fire() function
+		LOG_S(FString::Printf(TEXT("Sense Stone Hit Location = %s"), *GetActorLocation().ToString()));
 		Destroy();
 	}
 }

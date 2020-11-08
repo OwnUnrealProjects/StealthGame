@@ -4,6 +4,7 @@
 
 #include "Components/BoxComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Perception/PawnSensingComponent.h"
 
 #include "../Player/FPSMannequin.h"
 #include "../DebugTool/DebugLog.h"
@@ -19,11 +20,35 @@ AFPSAICharacter::AFPSAICharacter()
 	CatchPlayerCollision->SetupAttachment(GetMesh(), TEXT("SocketCollision"));
 	CatchPlayerCollision->SetBoxExtent(FVector(20.f, 32.f, 50.f));
 	CatchPlayerCollision->SetCollisionProfileName(TEXT("AICatchPlayer"));
-	CatchPlayerCollision->OnComponentHit.AddDynamic(this, &AFPSAICharacter::HandlePlayer);
+	CatchPlayerCollision->bGenerateOverlapEvents = true;
+	//CatchPlayerCollision->OnComponentBeginOverlap.AddDynamic(this, &AFPSAICharacter::HandlePlayer);
+
+
+	PawnSensingComp = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComponent"));
+	PawnSensingComp->OnHearNoise.AddDynamic(this, &AFPSAICharacter::OnPawnHearing);
 
 }
 
-void AFPSAICharacter::HandlePlayer(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AFPSAICharacter::OnPawnHearing(APawn* NInstigator, const FVector & Location, float Volume)
+{
+	LOG_S(FString::Printf(TEXT("Sense Hearing - Location = %s"), *Location.ToString()));
+}
+
+void AFPSAICharacter::TurnHearingPoint(FVector Point)
+{
+	FVector Direction = Point - GetActorLocation();
+	Direction.Normalize();
+
+	FRotator NewLookAt = FRotationMatrix::MakeFromX(Direction).Rotator();
+	NewLookAt.Pitch = 0.f;
+	NewLookAt.Roll = 0.f;
+
+	SetActorRotation(NewLookAt);
+
+	LOG_S(FString("Turn on Boss"));
+}
+
+void AFPSAICharacter::HandlePlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	LOG_S(FString("Boss HitComponent"));
 	auto Player = Cast<AFPSMannequin>(OtherActor);
@@ -41,6 +66,7 @@ void AFPSAICharacter::HandlePlayer(UPrimitiveComponent* HitComponent, AActor* Ot
 void AFPSAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	CatchPlayerCollision->OnComponentBeginOverlap.AddDynamic(this, &AFPSAICharacter::HandlePlayer);
 }
 
 

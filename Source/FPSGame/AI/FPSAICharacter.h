@@ -7,6 +7,7 @@
 #include "FPSAICharacter.generated.h"
 
 class UBoxComponent;
+class UPawnSensingComponent;
 
 UCLASS()
 class FPSGAME_API AFPSAICharacter : public ACharacter
@@ -22,10 +23,19 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Collision")
 	UBoxComponent* CatchPlayerCollision;
 
+	UPROPERTY(VisibleAnywhere, Category = "Component")
+	UPawnSensingComponent* PawnSensingComp;
+
 protected:
 
 	UFUNCTION()
-	void HandlePlayer(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	void HandlePlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnPawnHearing(APawn* NInstigator, const FVector & Location, float Volume);
+
+	UFUNCTION(BlueprintCallable, Category = "Perception")
+	void TurnHearingPoint(FVector Point);
 
 protected:
 	// Called when the game starts or when spawned
