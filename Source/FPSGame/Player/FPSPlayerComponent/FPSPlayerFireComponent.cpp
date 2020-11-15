@@ -130,6 +130,11 @@ bool UFPSPlayerFireComponent::SuggestStoneVelocity(FVector& OutTossVelocity, FVe
 	
 }
 
+
+
+//////////////// ================================== ////////////////////////////////////
+
+/// Same as SuggestStoneVelcity and SuggestProjectileVelocity // No more use it
 FVector UFPSPlayerFireComponent::CalculateFireDirection(FVector start, FVector end, float speed)
 {
 	

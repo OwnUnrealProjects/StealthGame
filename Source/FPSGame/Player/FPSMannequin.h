@@ -102,7 +102,7 @@ protected:
 
 
 	/// Pawn Properties. I Set it in Blueprint
-		UPROPERTY(BlueprintReadWrite, Category = "Feature")
+		UPROPERTY(Replicated, BlueprintReadWrite, Category = "Feature")
 		FCharcterFeature OwnFeatures;
 
 
@@ -169,6 +169,11 @@ protected:
 		void SR_RotateCroshairDirection(FRotator Direction);
 
 
+	void SetBeginPlayParams();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void SR_SetBeginPlayParams();
+
+
 
 public:
 	
@@ -193,11 +198,16 @@ public:
 		UFUNCTION(BlueprintCallable, Category = "CharacterAnim")
 		void SetPermissionFire(bool val) { bFire = val; }
 
+
 	/// We use it in FPSPlayerInput Class
 		bool IsFightAnimation() { return FightAnimMontage ? true : false; }
+		
+		// RPC
+		UFUNCTION(Server, Reliable, WithValidation)
+		void SR_Crouch(bool UpdateCrouch);
 
 		UFUNCTION(Server, Reliable, WithValidation)
-		void ServerCrouch(bool UpdateCrouch);
+		void SR_MakeStepNoise(bool enable);
 
 		float GetDefalutMaxSpeed() { return OwnFeatures.MaxSpeed; }
 		float GetDefaultCrouchSpeed() { return OwnFeatures.CrouchSpeed; }
@@ -218,8 +228,6 @@ public:
 
 	AFPSPlayerController* GetSelfController();
 
-
-	void MakeNoise(bool enable);
 
 
 

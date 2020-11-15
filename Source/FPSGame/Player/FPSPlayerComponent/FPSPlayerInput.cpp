@@ -169,11 +169,11 @@ void UFPSPlayerInput::MoveForward(float Val)
 
 		if (Player->GetPermissionCrouch())
 		{
-			Player->MakeNoise(false);
+			Player->SR_MakeStepNoise(false);
 		}
 		else
 		{
-			Player->MakeNoise(true);
+			Player->SR_MakeStepNoise(true);
 		}
 
 	}
@@ -199,11 +199,11 @@ void UFPSPlayerInput::MoveRight(float Val)
 
 		if (Player->GetPermissionCrouch())
 		{
-			Player->MakeNoise(false);
+			Player->SR_MakeStepNoise(false);
 		}
 		else
 		{
-			Player->MakeNoise(true);
+			Player->SR_MakeStepNoise(true);
 		}
 	}
 	

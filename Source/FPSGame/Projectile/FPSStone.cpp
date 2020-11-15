@@ -42,6 +42,7 @@ AFPSStone::AFPSStone()
 	StoneMovement->bRotationFollowsVelocity = true;*/
 	StoneMovement->bShouldBounce = true;
 	StoneMovement->bRotationFollowsVelocity = true;
+	
 	// Die after 3 seconds by default
 	//InitialLifeSpan = 3.0f;
 

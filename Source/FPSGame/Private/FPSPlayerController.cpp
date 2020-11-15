@@ -136,4 +136,6 @@ void AFPSPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 
 	DOREPLIFETIME(AFPSPlayerController, bPossess);
 	DOREPLIFETIME(AFPSPlayerController, CharacterName);
+	DOREPLIFETIME(AFPSPlayerController, MaxAimPrecision);
+	DOREPLIFETIME(AFPSPlayerController, MaxLoud);
 }

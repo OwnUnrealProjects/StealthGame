@@ -51,14 +51,23 @@ void AFPSAICharacter::TurnHearingPoint(FVector Point)
 void AFPSAICharacter::HandlePlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	LOG_S(FString("Boss HitComponent"));
-	auto Player = Cast<AFPSMannequin>(OtherActor);
+	AFPSMannequin* Player = Cast<AFPSMannequin>(OtherActor);
 	if (Player)
 	{
 		LOG_S(Player->GetName());
 	}
 
 	AFPSGameMode* GM = Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode());
-	GM->MissionFaild(Player);
+	if (GM && Player->IsControlled())
+	{
+		GM->MissionFaild(Player);
+		LOG_S(FString("FPSGameMode is Not NULL"));
+	}
+	else
+	{
+		LOG_S(FString("FPSGameMode is NULL"));
+	}
+	
 	
 }
 

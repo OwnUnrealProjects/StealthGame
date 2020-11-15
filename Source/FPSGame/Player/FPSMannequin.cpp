@@ -90,23 +90,49 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 void AFPSMannequin::BeginPlay()
 {
 	Super::BeginPlay();
+
+
 	if (Role == ROLE_Authority)
 		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Server"), nullptr, FColor::Red, 10.f);
 	if (Role == ROLE_AutonomousProxy)
 		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Client"), nullptr, FColor::Yellow, 10.f);
-	//if (HasAuthority())
-	{
-		OwnController = GetSelfController();
-		if (!OwnController) return;
-		BulletSpread = OwnController->GetMaxAimPrecision() - OwnFeatures.AimPrecision;
-		Loudness = OwnController->GetMaxLoud() - OwnFeatures.Smart;
-		//LOG_S(FString("OwnController is not NULL"));
-	}
+
+	SetBeginPlayParams();
+	
+}
+
+
+void AFPSMannequin::SetBeginPlayParams()
+{
+	if (Role < ROLE_Authority)
+		SR_SetBeginPlayParams();
+
+	OwnController = GetSelfController();
+	if (!OwnController) return;
+
+	BulletSpread = OwnController->GetMaxAimPrecision() - OwnFeatures.AimPrecision;
+	Loudness = OwnController->GetMaxLoud() - OwnFeatures.Smart;
+
+	bCrouch = false;
+
+
+}
+
+
+void AFPSMannequin::SR_SetBeginPlayParams_Implementation()
+{
+	OwnController = GetSelfController();
+	if (!OwnController) return;
+	BulletSpread = OwnController->GetMaxAimPrecision() - OwnFeatures.AimPrecision;
+	Loudness = OwnController->GetMaxLoud() - OwnFeatures.Smart;
 
 	bCrouch = false;
 }
 
-
+bool AFPSMannequin::SR_SetBeginPlayParams_Validate()
+{
+	return true;
+}
 
 // Called every frame
 void AFPSMannequin::Tick(float DeltaTime)
@@ -123,19 +149,6 @@ void AFPSMannequin::Tick(float DeltaTime)
 }
 
 
-void AFPSMannequin::MakeNoise(bool enable)
-{
-	
-	if (enable)
-	{
-		MannequinNoiseEmitterComponent->MakeNoise(this, Loudness, GetActorLocation());
-		LOG_S(FString::Printf(TEXT("Player Noise = %f"), Loudness));
-	}
-	else
-	{
-		LOG_S(FString("Player Silence"));
-	}
-}
 
 void AFPSMannequin::UnPossessed()
 {
@@ -153,6 +166,7 @@ void AFPSMannequin::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AFPSMannequin, bMoving);
 	DOREPLIFETIME(AFPSMannequin, bAiming);
 	DOREPLIFETIME(AFPSMannequin, Loudness);
+	DOREPLIFETIME(AFPSMannequin, OwnFeatures);
 	DOREPLIFETIME(AFPSMannequin, FightAnimMontage);
 	DOREPLIFETIME(AFPSMannequin, FireAnimPlayRate);
 	DOREPLIFETIME(AFPSMannequin, RandomPointRotation);
@@ -182,7 +196,7 @@ void AFPSMannequin::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 void AFPSMannequin::SetPermissionCrouch(bool val)
 {
 	if(Role < ROLE_Authority)
-		ServerCrouch(val);
+		SR_Crouch(val);
 
 	bCrouch = val;
 	if (val)
@@ -197,19 +211,37 @@ void AFPSMannequin::SetPermissionCrouch(bool val)
 }
 
 
-void AFPSMannequin::ServerCrouch_Implementation(bool UpdateCrouch)
+void AFPSMannequin::SR_Crouch_Implementation(bool UpdateCrouch)
 {
 	SetPermissionCrouch(UpdateCrouch);
 }
 
 
 
-bool AFPSMannequin::ServerCrouch_Validate(bool UpdateCrouch)
+bool AFPSMannequin::SR_Crouch_Validate(bool UpdateCrouch)
 {
 	return true;
 }
 
 
+
+void AFPSMannequin::SR_MakeStepNoise_Implementation(bool enable)
+{
+	if (enable)
+	{
+		MannequinNoiseEmitterComponent->MakeNoise(this, Loudness, GetActorLocation());
+		LOG_S(FString::Printf(TEXT("Player Noise = %f"), Loudness));
+	}
+	else
+	{
+		LOG_S(FString("Player Silence"));
+	}
+}
+
+bool AFPSMannequin::SR_MakeStepNoise_Validate(bool enable)
+{
+	return true;
+}
 
 void AFPSMannequin::PlayFightAnim(EFightState State)
 {
@@ -369,30 +401,31 @@ void AFPSMannequin::SR_Fire_Implementation()
 			StoneSpawnLocation = StoneSpawnPoint->GetComponentLocation();
 			StoneEndLocation = MannequinAimingComponent->GetLineTraceEndPoint();
 			StoneSpeed = MannequinAimingComponent->GetLineTraceLength() / 2;
-			LOG_S(FString("TTT SR_Fire_Implementation"));
+			/*LOG_S(FString("TTT SR_Fire_Implementation"));
 			LOG_S(FString::Printf(TEXT("TTT PermisionAiming StoneSpawnLocation = %s"), *StoneSpawnLocation.ToString()));
 			LOG_S(FString::Printf(TEXT("TTT PermisionAiming StoneEndLocation = %s"), *StoneEndLocation.ToString()));
-			LOG_S(FString::Printf(TEXT("TTT PermisionAiming Speed = %f"), StoneSpeed));
+			LOG_S(FString::Printf(TEXT("TTT PermisionAiming Speed = %f"), StoneSpeed));*/
 			
 
 			/// SugestProjectileVelocity
 			FVector DirectionLocation = MannequinFireComponent->GetFireDirection(StoneSpawnLocation, StoneEndLocation, StoneSpeed);
-			LOG_S(FString::Printf(TEXT("TTT PermisionAiming DirectionLocation = %s"), *DirectionLocation.ToString()));
-			LOG_S(FString("TTT ======================================================= "));
+			/*LOG_S(FString::Printf(TEXT("TTT PermisionAiming DirectionLocation = %s"), *DirectionLocation.ToString()));
+			LOG_S(FString("TTT ======================================================= "));*/
 			/// Spread of Stone
 			float HalfRad = FMath::DegreesToRadians(BulletSpread);
 			DirectionLocation = FMath::VRandCone(DirectionLocation, HalfRad, HalfRad);
+			LOG_F(BulletSpread);
 
 			/// Get Stone Direction
 			FVector NormalLocation = DirectionLocation.GetSafeNormal();
 			StoneRotation = NormalLocation.Rotation();
 
 
-			LOG_S(FString::Printf(TEXT("FFF PermisionAiming StoneRotation = %s"), *StoneRotation.ToString()));
+			/*LOG_S(FString::Printf(TEXT("FFF PermisionAiming StoneRotation = %s"), *StoneRotation.ToString()));
 			LOG_S(FString::Printf(TEXT("FFF PermisionAiming Speed = %f"), StoneSpeed));
 
 			
-			LOG_S(FString("PermisionAiming Spawn_AimPoint"));
+			LOG_S(FString("PermisionAiming Spawn_AimPoint"));*/
 			if (Role == ROLE_Authority)
 			{
 				LOG_S(FString("FFF PermisionAiming Server"));
@@ -418,25 +451,29 @@ void AFPSMannequin::SR_Fire_Implementation()
 
 		//Set Spawn Collision Handling Override
 		FActorSpawnParameters ActorSpawnParams;
-		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+		//ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 		ActorSpawnParams.Instigator = this;
 		
-		AFPSStone* Stone = GetWorld()->SpawnActor<AFPSStone>(StoneBlueprinClass, StoneSpawnLocation, StoneRotation, ActorSpawnParams);
-		Stone->LaunchStone(StoneSpeed);
 		
+		
+		AFPSStone* Stone = GetWorld()->SpawnActor<AFPSStone>(StoneBlueprinClass, StoneSpawnLocation, StoneRotation, ActorSpawnParams);
+		if (Stone)
+		{
+			LOG_S(FString::Printf(TEXT("SSS Stone Scale = %s"), *Stone->GetActorScale().ToString()));
+			LOG_S(FString::Printf(TEXT("SSS PermisionAiming StoneSpawnLocation = %s"), *StoneSpawnLocation.ToString()));
+			Stone->LaunchStone(StoneSpeed);
+			DrawDebugLine(
+				GetWorld(),
+				Stone->GetActorLocation(),
+				Stone->GetActorLocation() + Stone->GetActorForwardVector() * 200.f,
+				FColor(0, 255, 0),
+				false,
+				10.f,
+				0.f,
+				5.f
+			);
+		}
 
-		DrawDebugLine(
-			GetWorld(),
-			Stone->GetActorLocation(),
-			Stone->GetActorLocation() + Stone->GetActorForwardVector() * 200.f,
-			FColor(0, 255, 0),
-			false,
-			10.f,
-			0.f,
-			5.f
-		);
-
-	
 	}
 }
 

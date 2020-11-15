@@ -61,7 +61,9 @@ private:
 
 	enum ENetRole OwnerPlayerRole = ENetRole::ROLE_None;
 	enum ENetRole OwnerPlayerRemotRole = ENetRole::ROLE_None;
-	
+
+	UPROPERTY(Replicated)
 	float MaxAimPrecision;
+	UPROPERTY(Replicated)
 	float MaxLoud;
 };
