@@ -7,6 +7,9 @@
 #include "FPSPlayerFireComponent.generated.h"
 
 class AFPSMannequin;
+class UAnimMontage;
+enum  class EFightState : uint8;
+class AFPSStone;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FPSGAME_API UFPSPlayerFireComponent : public UActorComponent
@@ -21,6 +24,14 @@ private:
 
 	AFPSMannequin* Player;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
+	UAnimMontage* FightAnimMontage;
+
+	/** Projectile class to spawn */
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	TSubclassOf<AFPSStone> StoneBlueprinClass;
+
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -31,5 +42,12 @@ public:
 	bool SuggestStoneVelocity(FVector& OutTossVelocity, FVector Start, FVector End, float TossSpeed, bool bFavorHighArc);
 
 	FVector CalculateFireDirection(FVector start, FVector end, float speed);
+
+
+
+	void PlayAnim(EFightState State);
+	void FireStone();
+
+	UAnimMontage* GetFightAnim() { return FightAnimMontage; }
 	
 };

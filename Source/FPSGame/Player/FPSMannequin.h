@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "FPSPlayerComponent/FPSPlayerFireComponent.h"
 #include "FPSMannequin.generated.h"
 
 class AFPSPlayerController;
@@ -88,6 +89,8 @@ protected:
 		UCameraComponent* CameraComponent;
 		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Aiming")
 		UArrowComponent* StoneSpawnPoint;
+		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Collision")
+		UCapsuleComponent* HeadCollision;
 
 
 	/// Pawn Ability Components
@@ -121,8 +124,6 @@ protected:
 
 	/// FIRE
 		// Fire AimPoint & Fire Animation
-		UPROPERTY(Replicated, EditDefaultsOnly, Category = "Gameplay")
-		UAnimMontage* FightAnimMontage;
 		UPROPERTY(BlueprintReadOnly, Category = "CharacterAnim")
 		bool bFire;
 		UPROPERTY(Replicated)
@@ -138,13 +139,11 @@ protected:
 
 
 		//Projectile
-		/** Projectile class to spawn */
-		UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-		TSubclassOf<AFPSStone> StoneBlueprinClass;
+		/** Aiming Precision */
 		UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
-		float BulletSpread;
+		float StoneSpread;
 
-protected:
+public:
 	
 /// Replication
 
@@ -168,6 +167,7 @@ protected:
 		UFUNCTION(Server,Reliable,WithValidation)
 		void SR_RotateCroshairDirection(FRotator Direction);
 
+protected:
 
 	void SetBeginPlayParams();
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -187,20 +187,28 @@ public:
 		bool GetPermissionMoving() { return bMoving; }
 		UFUNCTION(BlueprintCallable, Category = "CharacterAnim")
 		void SetPermissionMoving(bool val) { bMoving = val; }
-
+	
+	// Really I don't use it
 		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
 		bool GetPermissionAiming() { return bAiming; }
 		UFUNCTION(BlueprintCallable, Category = "CharacterAnim")
 		void SetPermissionAiming(bool val);
+	//  // // //
 
 		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
 		bool GetPermissionFire() { return bFire; }
 		UFUNCTION(BlueprintCallable, Category = "CharacterAnim")
 		void SetPermissionFire(bool val) { bFire = val; }
 
+		void SetClientRandomFireRotation(bool val) { ClientRandomFireRotate = val; }
+		float GetFireAnimPlayRate() { return FireAnimPlayRate; }
+		UArrowComponent* GetStoneSpawnPointComponent() { return StoneSpawnPoint; }
+		UFPSPlayerAiming* GetAimingComponent() { return MannequinAimingComponent; }
+		float GetBulletSpread() { return StoneSpread; }
 
-	/// We use it in FPSPlayerInput Class
-		bool IsFightAnimation() { return FightAnimMontage ? true : false; }
+
+	/// We use it in FPSPlayerInput Class // Really I don't use it
+		bool IsFightAnimation() { return MannequinFireComponent->GetFightAnim() ? true : false; }
 		
 		// RPC
 		UFUNCTION(Server, Reliable, WithValidation)
@@ -247,3 +255,16 @@ public:
 
 
 };
+
+
+
+
+// ================================================================= //
+//                 Remove TO FireComponent
+
+/** Projectile class to spawn */
+//UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+//TSubclassOf<AFPSStone> StoneBlueprinClass;
+//
+//UPROPERTY(Replicated, EditDefaultsOnly, Category = "Gameplay")
+//UAnimMontage* FightAnimMontage;

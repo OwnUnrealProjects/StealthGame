@@ -177,3 +177,144 @@ FVector UFPSPlayerFireComponent::CalculateFireDirection(FVector start, FVector e
 	return C_Result;
 }
 
+void UFPSPlayerFireComponent::PlayAnim(EFightState State)
+{
+	if (FightAnimMontage)
+	{
+		LOG_S(FString("FightAnimMontage is not NULL"));
+		switch (State)
+		{
+		case EFightState::Aim:
+			// As RPC is executed on Server and
+			// As RPC is also called from HostPlayer and what Server Know is also is known HostPlayer
+			// We need not PlayAnimMontage() is Executed two times for HostPlayer
+			if (Player->Role < ROLE_Authority)
+				Player->PlayAnimMontage(FightAnimMontage, 1.f, "StartThrow");
+			// This executed only server not Client 
+			Player->SR_FightAnim(FName("StartThrow"), true);
+			LOG_S(FString("From Server To Client"));
+			break;
+		case EFightState::UndoAim:
+			if (Player->Role < ROLE_Authority)
+				Player->PlayAnimMontage(FightAnimMontage, 1.f, "UndoThrow");
+			Player->SR_FightAnim(FName("UndoThrow"), false);
+			break;
+		case EFightState::Fire:
+
+			if (!Player->GetPermissionAiming())
+			{
+				Player->SetClientRandomFireRotation(true);
+				FRotator CroshairRotation = Player->GetControlRotation();
+				Player->SR_RotateCroshairDirection(CroshairRotation);
+			}
+
+			if (Player->Role < ROLE_Authority)
+				Player->PlayAnimMontage(FightAnimMontage, Player->GetFireAnimPlayRate(), "Throw");
+			Player->SR_FightAnim(FName("Throw"), false);
+			//Fire();
+			break;
+		case EFightState::None:
+			break;
+		default:
+			break;
+		}
+
+	}
+}
+
+void UFPSPlayerFireComponent::FireStone()
+{
+	if (StoneBlueprinClass)
+	{
+
+		FVector StoneSpawnLocation;
+		FVector StoneEndLocation;
+		float StoneSpeed;
+		FRotator StoneRotation;
+		LOG_S(FString("SR_Fire_Implementation"));
+		if (Player->GetPermissionAiming())
+		{
+			// FVector StoneLocation = GetMesh()->GetSocketLocation("StoneStartPoint"); -- 
+				// In Socket location case Stone spawn and SuggestProjectileVelocity() not work properly
+				// Fire location don't match Aim location
+
+			/// Get Location & Speed
+			StoneSpawnLocation = Player->GetStoneSpawnPointComponent()->GetComponentLocation();
+			StoneEndLocation = Player->GetAimingComponent()->GetLineTraceEndPoint();
+			StoneSpeed = Player->GetAimingComponent()->GetLineTraceLength() / 2;
+			/*LOG_S(FString("TTT SR_Fire_Implementation"));
+			LOG_S(FString::Printf(TEXT("TTT PermisionAiming StoneSpawnLocation = %s"), *StoneSpawnLocation.ToString()));
+			LOG_S(FString::Printf(TEXT("TTT PermisionAiming StoneEndLocation = %s"), *StoneEndLocation.ToString()));
+			LOG_S(FString::Printf(TEXT("TTT PermisionAiming Speed = %f"), StoneSpeed));*/
+
+
+			/// SugestProjectileVelocity
+			FVector DirectionLocation = GetFireDirection(StoneSpawnLocation, StoneEndLocation, StoneSpeed);
+			/*LOG_S(FString::Printf(TEXT("TTT PermisionAiming DirectionLocation = %s"), *DirectionLocation.ToString()));
+			LOG_S(FString("TTT ======================================================= "));*/
+			/// Spread of Stone
+			float HalfRad = FMath::DegreesToRadians(Player->GetBulletSpread());
+			DirectionLocation = FMath::VRandCone(DirectionLocation, HalfRad, HalfRad);
+			LOG_F(Player->GetBulletSpread());
+
+			/// Get Stone Direction
+			FVector NormalLocation = DirectionLocation.GetSafeNormal();
+			StoneRotation = NormalLocation.Rotation();
+
+
+			/*LOG_S(FString::Printf(TEXT("FFF PermisionAiming StoneRotation = %s"), *StoneRotation.ToString()));
+			LOG_S(FString::Printf(TEXT("FFF PermisionAiming Speed = %f"), StoneSpeed));
+
+
+			LOG_S(FString("PermisionAiming Spawn_AimPoint"));*/
+			if (Player->Role == ROLE_Authority)
+			{
+				LOG_S(FString("FFF PermisionAiming Server"));
+			}
+			if (Player->Role == ROLE_AutonomousProxy)
+			{
+				LOG_S(FString("FFF PermisionAiming Client"));
+			}
+
+			LOG_S(FString("AAA Fire_ Aiming"));
+
+		}
+		else
+		{
+			StoneSpawnLocation = Player->GetStoneSpawnPointComponent()->GetComponentLocation();
+			float PitchVal = FMath::RandRange(1.f, 3.f);
+			StoneRotation = FRotator(PitchVal, Player->GetActorRotation().Yaw, 0);
+
+			float speedrange = FMath::RandRange(2.f, 4.f);
+			StoneSpeed = Player->GetAimingComponent()->GetLineTraceLength() / speedrange;
+			LOG_S(FString("AAA Fire_ Random"));
+		}
+
+		//Set Spawn Collision Handling Override
+		FActorSpawnParameters ActorSpawnParams;
+		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+		ActorSpawnParams.Instigator = Player;
+
+
+
+		AFPSStone* Stone = GetWorld()->SpawnActor<AFPSStone>(StoneBlueprinClass, StoneSpawnLocation, StoneRotation, ActorSpawnParams);
+		if (Stone)
+		{
+			LOG_S(FString::Printf(TEXT("SSS Stone Scale = %s"), *Stone->GetActorScale().ToString()));
+			LOG_S(FString::Printf(TEXT("SSS PermisionAiming StoneSpawnLocation = %s"), *StoneSpawnLocation.ToString()));
+			Stone->LaunchStone(StoneSpeed);
+			DrawDebugLine(
+				GetWorld(),
+				Stone->GetActorLocation(),
+				Stone->GetActorLocation() + Stone->GetActorForwardVector() * 200.f,
+				FColor(0, 255, 0),
+				false,
+				10.f,
+				0.f,
+				5.f
+			);
+		}
+
+	}
+}
+
