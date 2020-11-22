@@ -10,6 +10,14 @@
 
 #define OUT
 
+static int32 DebugFireLocationsDrawing = 0;
+FAutoConsoleVariableRef CVARDebugFireLocationsDrawing(
+	TEXT("DebugFireLocations"),
+	DebugFireLocationsDrawing,
+	TEXT("Draw Fire start & End Positions"),
+	ECVF_SetByConsole
+);
+
 // Sets default values for this component's properties
 UFPSPlayerFireComponent::UFPSPlayerFireComponent()
 {
@@ -62,8 +70,12 @@ FVector UFPSPlayerFireComponent::GetFireDirection(FVector start, FVector end, fl
 		LOG_S(FString("SPV = false"));
 	}
 
-	DrawDebugSphere(GetWorld(), start, 25, 12, FColor::Yellow, false, 10.f, 0, 1.f);
-	DrawDebugSphere(GetWorld(), end, 25, 12, FColor::Red, false, 50.f, 0, 3.f);
+	if (DebugFireLocationsDrawing > 0)
+	{
+		DrawDebugSphere(GetWorld(), start, 25, 12, FColor::Yellow, false, 10.f, 0, 1.f);
+		DrawDebugSphere(GetWorld(), end, 25, 12, FColor::Red, false, 50.f, 0, 3.f);
+	}
+	
 
 	return LaunchVelocity;
 }

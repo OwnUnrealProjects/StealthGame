@@ -9,6 +9,7 @@
 #include "../Public/FPSPlayerController.h"
 #include "../Projectile/FPSStone.h"
 #include "../FPSGame.h"
+#include "../Library/FPSMath.h"
 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -69,6 +70,16 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 
 	HeadCollision = CreateDefaultSubobject<UCapsuleComponent>(TEXT("HeadCollision"));
 	HeadCollision->SetupAttachment(GetMesh());
+	HeadCollision->RelativeLocation = FVector(13.f, 0.f, 175.f);
+	HeadCollision->SetCapsuleHalfHeight(35.f);
+	HeadCollision->SetCapsuleRadius(27.f);
+	HeadCollision->SetCollisionProfileName(TEXT("CharacterHead"));
+	//HeadCollision->OnComponentHit.AddDynamic(this, &AFPSMannequin::HeadShoot);
+
+	TM_ShotDirection.Add(0, "Forward");
+	TM_ShotDirection.Add(90, "Left");
+	TM_ShotDirection.Add(180, "Back");
+	TM_ShotDirection.Add(270, "Right");
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	//GetCharacterMovement()->MaxWalkSpeed = OwnFeatures.MaxSpeed;
@@ -89,12 +100,13 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 
 
 
+
 // Called when the game starts or when spawned
 void AFPSMannequin::BeginPlay()
 {
 	Super::BeginPlay();
 
-
+	HeadCollision->OnComponentHit.AddDynamic(this, &AFPSMannequin::HeadShoot);
 	if (Role == ROLE_Authority)
 		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Server"), nullptr, FColor::Red, 10.f);
 	if (Role == ROLE_AutonomousProxy)
@@ -133,6 +145,32 @@ void AFPSMannequin::SR_SetBeginPlayParams_Implementation()
 bool AFPSMannequin::SR_SetBeginPlayParams_Validate()
 {
 	return true;
+}
+
+void AFPSMannequin::HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+
+	if (!OtherActor)
+		return;
+	FName* StoneTag = OtherActor->Tags.GetData();
+	FString ST = StoneTag->GetPlainNameString();
+	if (ST == "Projectile")
+	{
+		float HitDegree = FPSMath::GetHitPointDirection(Hit.ImpactPoint, HeadCollision->GetComponentLocation(), this);
+		LOG_S(FString::Printf(TEXT("Head Hit Stone HitDegree = %f"), HitDegree));
+		HeadShotDirection = HitDegree;
+		bIsheadshot = true;
+		PlayAnimMontage(HeadShotAnim, 1.f, TM_ShotDirection[HitDegree]);
+
+		GetWorldTimerManager().SetTimer(FTimer_HeadShotAnim, this, &AFPSMannequin::GetUp, 5.f, false);
+	}
+	
+}
+
+void AFPSMannequin::GetUp()
+{
+	PlayAnimMontage(HeadShotAnim, 1.f, "GetUp");
+	LOG_S(FString("Head Hit Stone GetUp"));
 }
 
 // Called every frame

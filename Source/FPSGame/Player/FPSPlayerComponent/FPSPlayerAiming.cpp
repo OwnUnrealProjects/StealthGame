@@ -18,13 +18,6 @@
 #define OUT
 
 
-static int32 DebugFireLocationsDrawing = 0;
-FAutoConsoleVariableRef CVARDebugFireLocationsDrawing(
-	TEXT("COOP.DebugFireLocations"),
-	DebugFireLocationsDrawing,
-	TEXT("Draw Fire start & End Positions"),
-	ECVF_Cheat
-);
 
 
 // Sets default values for this component's properties
@@ -121,24 +114,8 @@ void UFPSPlayerAiming::AimPoint(float ParticleTangent)
 		LOG_S(FString("TraceComp is Spawned"));
 	}
 	
-	//DrawDebugLine(
-	//	GetWorld(),
-	//	Player->GetActorLocation(),//OUT StartLocation,
-	//	OUT LineTracePoint,
-	//	FColor(255, 0, 0),
-	//	false,
-	//	10.f,
-	//	0.f,
-	//	5.f
-	//);
 
-	if (DebugFireLocationsDrawing > 0)
-	{
-		DrawDebugSphere(GetWorld(), StartLocation, 100, 12, FColor::Yellow, false, 2.f, 0, 1.f);
-		DrawDebugSphere(GetWorld(), LineTracePoint, 100, 12, FColor::Red, false, 10.f, 0, 3.f);
-	}
 
-	
 
 }
 

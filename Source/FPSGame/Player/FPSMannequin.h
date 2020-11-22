@@ -78,6 +78,13 @@ private:
 
 	AFPSPlayerController* OwnController;
 
+	TMap<float, FName> TM_ShotDirection;
+
+private:
+
+	void GetUp();
+	FTimerHandle FTimer_HeadShotAnim;
+
 protected:
 	
 	/// Pawn Consistence Part
@@ -143,6 +150,16 @@ protected:
 		UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
 		float StoneSpread;
 
+	/// Head Shot
+		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "HeadShot")
+		bool bIsheadshot;
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HeadShot")
+		float HeadShotDirection;
+
+		UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
+		UAnimMontage* HeadShotAnim;
+
+
 public:
 	
 /// Replication
@@ -173,38 +190,46 @@ protected:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void SR_SetBeginPlayParams();
 
-
+	/// Shoot
+	UFUNCTION()
+	void HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 public:
 	
 	/// Permissions
 		// Geter and Seter of Permissions
 		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
-		bool GetPermissionCrouch() { return bCrouch; }
+		inline bool GetPermissionCrouch() { return bCrouch; }
 		void SetPermissionCrouch(bool val);
 
 		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
-		bool GetPermissionMoving() { return bMoving; }
+		inline bool GetPermissionMoving() { return bMoving; }
 		UFUNCTION(BlueprintCallable, Category = "CharacterAnim")
 		void SetPermissionMoving(bool val) { bMoving = val; }
 	
 	// Really I don't use it
 		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
-		bool GetPermissionAiming() { return bAiming; }
+		inline bool GetPermissionAiming() { return bAiming; }
 		UFUNCTION(BlueprintCallable, Category = "CharacterAnim")
 		void SetPermissionAiming(bool val);
 	//  // // //
 
 		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
-		bool GetPermissionFire() { return bFire; }
+		inline bool GetPermissionFire() { return bFire; }
 		UFUNCTION(BlueprintCallable, Category = "CharacterAnim")
 		void SetPermissionFire(bool val) { bFire = val; }
 
-		void SetClientRandomFireRotation(bool val) { ClientRandomFireRotate = val; }
-		float GetFireAnimPlayRate() { return FireAnimPlayRate; }
-		UArrowComponent* GetStoneSpawnPointComponent() { return StoneSpawnPoint; }
-		UFPSPlayerAiming* GetAimingComponent() { return MannequinAimingComponent; }
-		float GetBulletSpread() { return StoneSpread; }
+		inline void SetClientRandomFireRotation(bool val) { ClientRandomFireRotate = val; }
+		inline float GetFireAnimPlayRate() { return FireAnimPlayRate; }
+		inline UArrowComponent* GetStoneSpawnPointComponent() { return StoneSpawnPoint; }
+		inline UFPSPlayerAiming* GetAimingComponent() { return MannequinAimingComponent; }
+		inline float GetBulletSpread() { return StoneSpread; }
+
+		UFUNCTION(BlueprintPure, Category = "HeadShot")
+		inline bool GetHeadShotPermission() { return bIsheadshot; }
+		inline void SetHeadShotPermisssion(bool val) { bIsheadshot = val; }
+		UFUNCTION(BlueprintPure, Category = "HeadShot")
+		inline float GetHeadShotDirection() { return HeadShotDirection; }
 
 
 	/// We use it in FPSPlayerInput Class // Really I don't use it
@@ -217,19 +242,19 @@ public:
 		UFUNCTION(Server, Reliable, WithValidation)
 		void SR_MakeStepNoise(bool enable);
 
-		float GetDefalutMaxSpeed() { return OwnFeatures.MaxSpeed; }
-		float GetDefaultCrouchSpeed() { return OwnFeatures.CrouchSpeed; }
+		inline float GetDefalutMaxSpeed() { return OwnFeatures.MaxSpeed; }
+		inline float GetDefaultCrouchSpeed() { return OwnFeatures.CrouchSpeed; }
 
 		void PlayFightAnim(EFightState State);
 
-		USpringArmComponent* GetCameraArmComponent() const { return CameraArm; }
+		inline USpringArmComponent* GetCameraArmComponent() const { return CameraArm; }
 
 	/// We use it in FPSPlayerAiming Class
-		UCameraComponent* GetCameraComponent() const { return CameraComponent; }
+		inline UCameraComponent* GetCameraComponent() const { return CameraComponent; }
 	
 	/// Blueprint Functions
 		UFUNCTION(BlueprintPure, Category = "Feature")
-		FCharcterFeature GetOwnFeature() { return OwnFeatures; }
+		inline FCharcterFeature GetOwnFeature() { return OwnFeatures; }
 
 		UFUNCTION(BlueprintImplementableEvent, Category = "ChracterAnim")
 		void CanCrouched(bool Enable);
