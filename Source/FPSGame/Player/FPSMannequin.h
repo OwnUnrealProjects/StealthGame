@@ -82,8 +82,11 @@ private:
 
 private:
 
-	void GetUp();
-	FTimerHandle FTimer_HeadShotAnim;
+	/// HeadShot
+		UFUNCTION()
+		void GetUp(FName slotname);
+		FTimerDelegate TimerDel;
+		FTimerHandle FTimer_HeadShotAnim;
 
 protected:
 	
@@ -225,9 +228,11 @@ public:
 		inline UFPSPlayerAiming* GetAimingComponent() { return MannequinAimingComponent; }
 		inline float GetBulletSpread() { return StoneSpread; }
 
+	/// HeadShot
 		UFUNCTION(BlueprintPure, Category = "HeadShot")
 		inline bool GetHeadShotPermission() { return bIsheadshot; }
-		inline void SetHeadShotPermisssion(bool val) { bIsheadshot = val; }
+		UFUNCTION(BlueprintCallable, Category = "HeadShot")
+		void SetHeadShotPermisssion(bool val) { bIsheadshot = val; }
 		UFUNCTION(BlueprintPure, Category = "HeadShot")
 		inline float GetHeadShotDirection() { return HeadShotDirection; }
 
@@ -258,6 +263,7 @@ public:
 
 		UFUNCTION(BlueprintImplementableEvent, Category = "ChracterAnim")
 		void CanCrouched(bool Enable);
+
 
 	AFPSPlayerController* GetSelfController();
 

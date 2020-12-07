@@ -32,6 +32,10 @@ private:
 	TSubclassOf<AFPSStone> StoneBlueprinClass;
 
 
+	UPROPERTY(EditDefaultsOnly, Category = "Debug")
+	bool DebugFireLocationsDrawing;
+
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

@@ -77,9 +77,9 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 	//HeadCollision->OnComponentHit.AddDynamic(this, &AFPSMannequin::HeadShoot);
 
 	TM_ShotDirection.Add(0, "Forward");
-	TM_ShotDirection.Add(90, "Left");
+	//TM_ShotDirection.Add(90, "Left");
 	TM_ShotDirection.Add(180, "Back");
-	TM_ShotDirection.Add(270, "Right");
+	//TM_ShotDirection.Add(270, "Right");
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	//GetCharacterMovement()->MaxWalkSpeed = OwnFeatures.MaxSpeed;
@@ -113,7 +113,6 @@ void AFPSMannequin::BeginPlay()
 		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Client"), nullptr, FColor::Yellow, 10.f);
 
 	SetBeginPlayParams();
-	
 	LOG_S(FString("SR_SetBeginPlayParams_Implementation BeginPlay"))
 }
 
@@ -156,20 +155,40 @@ void AFPSMannequin::HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherAc
 	FString ST = StoneTag->GetPlainNameString();
 	if (ST == "Projectile")
 	{
-		float HitDegree = FPSMath::GetHitPointDirection(Hit.ImpactPoint, HeadCollision->GetComponentLocation(), this);
+		float HitDegree = FPSMath::GetHitPointDirectionYaxis(Hit.ImpactPoint, HeadCollision->GetComponentLocation(), this);
 		LOG_S(FString::Printf(TEXT("Head Hit Stone HitDegree = %f"), HitDegree));
 		HeadShotDirection = HitDegree;
 		bIsheadshot = true;
-		PlayAnimMontage(HeadShotAnim, 1.f, TM_ShotDirection[HitDegree]);
+		bMoving = false;
 
-		GetWorldTimerManager().SetTimer(FTimer_HeadShotAnim, this, &AFPSMannequin::GetUp, 5.f, false);
+
+		PlayAnimMontage(HeadShotAnim, 1.f, TM_ShotDirection[HitDegree]);
+		
+		FName AnimSlotname;
+		if (HitDegree == 0)
+		{
+			AnimSlotname = FName("GetUp_F");
+		}
+		else
+		{
+			if (HeadShotAnim->IsValidSectionName(FName("GetUp_B")))
+			{
+				AnimSlotname = FName("GetUp_B");
+			}
+			else
+			{
+				AnimSlotname = FName("GetUp_F");
+			}
+		}
+		TimerDel.BindUFunction(this, FName("GetUp"), AnimSlotname);
+		GetWorld()->GetTimerManager().SetTimer(FTimer_HeadShotAnim, TimerDel, 5.f, false);
 	}
 	
 }
 
-void AFPSMannequin::GetUp()
+void AFPSMannequin::GetUp(FName slotname)
 {
-	PlayAnimMontage(HeadShotAnim, 1.f, "GetUp");
+	PlayAnimMontage(HeadShotAnim, 1.f, slotname);
 	LOG_S(FString("Head Hit Stone GetUp"));
 }
 

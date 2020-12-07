@@ -10,13 +10,15 @@
 
 #define OUT
 
-static int32 DebugFireLocationsDrawing = 0;
-FAutoConsoleVariableRef CVARDebugFireLocationsDrawing(
-	TEXT("DebugFireLocations"),
-	DebugFireLocationsDrawing,
-	TEXT("Draw Fire start & End Positions"),
-	ECVF_SetByConsole
-);
+//static int32 DebugFireLocationsDrawing = 0;
+//FAutoConsoleVariableRef CVARDebugFireLocationsDrawing(
+//	TEXT("FPS.DebugFireLocations"),
+//	DebugFireLocationsDrawing,
+//	TEXT("Draw Fire start & End Positions"),
+//	ECVF_SetByConsole
+//);
+
+
 
 // Sets default values for this component's properties
 UFPSPlayerFireComponent::UFPSPlayerFireComponent()
@@ -70,7 +72,7 @@ FVector UFPSPlayerFireComponent::GetFireDirection(FVector start, FVector end, fl
 		LOG_S(FString("SPV = false"));
 	}
 
-	if (DebugFireLocationsDrawing > 0)
+	if (DebugFireLocationsDrawing)
 	{
 		DrawDebugSphere(GetWorld(), start, 25, 12, FColor::Yellow, false, 10.f, 0, 1.f);
 		DrawDebugSphere(GetWorld(), end, 25, 12, FColor::Red, false, 50.f, 0, 3.f);
@@ -251,7 +253,8 @@ void UFPSPlayerFireComponent::FireStone()
 				// Fire location don't match Aim location
 
 			/// Get Location & Speed
-			StoneSpawnLocation = Player->GetStoneSpawnPointComponent()->GetComponentLocation();
+			StoneSpawnLocation = Player->GetMesh()->GetSocketLocation("StoneStartPoint");
+			//StoneSpawnLocation = Player->GetStoneSpawnPointComponent()->GetComponentLocation();
 			StoneEndLocation = Player->GetAimingComponent()->GetLineTraceEndPoint();
 			StoneSpeed = Player->GetAimingComponent()->GetLineTraceLength() / 2;
 			/*LOG_S(FString("TTT SR_Fire_Implementation"));
@@ -315,16 +318,19 @@ void UFPSPlayerFireComponent::FireStone()
 			LOG_S(FString::Printf(TEXT("SSS Stone Scale = %s"), *Stone->GetActorScale().ToString()));
 			LOG_S(FString::Printf(TEXT("SSS PermisionAiming StoneSpawnLocation = %s"), *StoneSpawnLocation.ToString()));
 			Stone->LaunchStone(StoneSpeed);
-			DrawDebugLine(
-				GetWorld(),
-				Stone->GetActorLocation(),
-				Stone->GetActorLocation() + Stone->GetActorForwardVector() * 200.f,
-				FColor(0, 255, 0),
-				false,
-				10.f,
-				0.f,
-				5.f
-			);
+			if (DebugFireLocationsDrawing)
+			{
+				DrawDebugLine(
+					GetWorld(),
+					Stone->GetActorLocation(),
+					Stone->GetActorLocation() + Stone->GetActorForwardVector() * 200.f,
+					FColor(0, 255, 0),
+					false,
+					10.f,
+					0.f,
+					5.f
+				);
+			}
 		}
 
 	}

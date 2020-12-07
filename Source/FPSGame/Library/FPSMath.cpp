@@ -73,4 +73,20 @@ namespace FPSMath {
 		//LOG_S(FString("Head Hit Stone ======================================================"));
 		//LOG_S(FString::Printf(TEXT("Head Hit Stone DotProdact degree S & FR Acos = %f"), DotProdact));
 	}
+
+	float GetHitPointDirectionYaxis(FVector HitPoint, FVector CenterPoint, AActor* Actor)
+	{
+		FVector HitVector = CenterPoint - HitPoint;
+		HitVector = HitVector.GetSafeNormal(0.01);
+		float FHD = FVector::DotProduct(Actor->GetActorForwardVector(), HitVector);
+
+		float RotateDegree = 0;
+		if (FHD <= 0)
+			RotateDegree = 0;
+		if (FHD > 0)
+			RotateDegree = 180;
+
+		return RotateDegree;
+	}
+
 };

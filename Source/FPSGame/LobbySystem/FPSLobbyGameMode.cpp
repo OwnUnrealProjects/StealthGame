@@ -12,9 +12,9 @@
 
 AFPSLobbyGameMode::AFPSLobbyGameMode()
 {
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Blueprints/BP_Player"));
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass_Kaya(TEXT("/Game/Player_Character/Kaya/BP_Kaya"));
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass_Aj(TEXT("/Game/Player_Character/Aj/BP_Aj"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/OldProject/BP_Player"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass_Kaya(TEXT("/Game/PlayerCharacter/Kaya/BP_Kaya"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass_Aj(TEXT("/Game/PlayerCharacter/Aj/BP_Aj"));
 
 	if(PlayerPawnBPClass.Class != NULL)
 		DefaultPawnClass = PlayerPawnBPClass.Class;
