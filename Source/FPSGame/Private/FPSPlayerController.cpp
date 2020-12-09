@@ -15,6 +15,7 @@ AFPSPlayerController::AFPSPlayerController()
 
 	MaxAimPrecision = 10.f;
 	MaxLoud = 1.f;
+	MaxStrenght = 10.f;
 }
 
 

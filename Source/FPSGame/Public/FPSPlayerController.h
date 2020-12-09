@@ -46,6 +46,7 @@ public:
 
 	float GetMaxAimPrecision() { return MaxAimPrecision; }
 	float GetMaxLoud() { return MaxLoud; }
+	float GetMaxStrenght() { return MaxStrenght; }
 
 protected:
 
@@ -66,4 +67,6 @@ private:
 	float MaxAimPrecision;
 	UPROPERTY(Replicated)
 	float MaxLoud;
+	UPROPERTY()
+	float MaxStrenght;
 };

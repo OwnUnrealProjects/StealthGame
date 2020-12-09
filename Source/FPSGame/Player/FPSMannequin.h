@@ -59,6 +59,9 @@ public:
 	float AimPrecision;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Feature")
+	float Strength;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Feature")
 	UTexture2D* PlayerImage;
 
 };
@@ -158,6 +161,9 @@ protected:
 		bool bIsheadshot;
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HeadShot")
 		float HeadShotDirection;
+		/** Stand up time after Headshot */
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HeadShot")
+		float Solidity;
 
 		UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
 		UAnimMontage* HeadShotAnim;

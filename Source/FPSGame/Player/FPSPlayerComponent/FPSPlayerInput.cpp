@@ -262,15 +262,15 @@ void UFPSPlayerInput::ApplyFightState(EFightState State)
 		break;
 	case EFightState::Aim:
 		ApplyAimState();
-		DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("AimState"), nullptr, FColor::Red, 10.f);
+		//DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("AimState"), nullptr, FColor::Red, 10.f);
 		break;
 	case EFightState::UndoAim:
 		ApplyUndoAimState();
-		DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("UndoAimState"), nullptr, FColor::Red, 10.f);
+		//DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("UndoAimState"), nullptr, FColor::Red, 10.f);
 		break;
 	case EFightState::Fire:
 		ApplyFireState();
-		DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("FireState"), nullptr, FColor::Red, 10.f);
+		//DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("FireState"), nullptr, FColor::Red, 10.f);
 		break;
 	default:
 		break;

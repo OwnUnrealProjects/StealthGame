@@ -27,6 +27,14 @@
 
 #define OUT
 
+static int32 DebugPlayerRoleDrawing = 0;
+FAutoConsoleVariableRef CVARDebugPlayerRoleDrawing(
+	TEXT("FPS.DebugPlayerRole"),
+	DebugPlayerRoleDrawing,
+	TEXT("Draw Role Player Character"),
+	ECVF_SetByConsole
+);
+
 // Sets default values
 AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -107,13 +115,18 @@ void AFPSMannequin::BeginPlay()
 	Super::BeginPlay();
 
 	HeadCollision->OnComponentHit.AddDynamic(this, &AFPSMannequin::HeadShoot);
-	if (Role == ROLE_Authority)
-		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Server"), nullptr, FColor::Red, 10.f);
-	if (Role == ROLE_AutonomousProxy)
-		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Client"), nullptr, FColor::Yellow, 10.f);
+
 
 	SetBeginPlayParams();
-	LOG_S(FString("SR_SetBeginPlayParams_Implementation BeginPlay"))
+	
+	if (Role == ROLE_Authority)
+	{
+		LOG_S(FString("Server"));
+	}
+	if (Role == ROLE_AutonomousProxy)
+	{
+		LOG_S(FString("Client"));
+	}
 }
 
 
@@ -124,12 +137,19 @@ void AFPSMannequin::SetBeginPlayParams()
 
 	
 	OwnController = GetSelfController();
-	if (!OwnController) return;
-
-	StoneSpread = OwnController->GetMaxAimPrecision() - OwnFeatures.AimPrecision;
-	Loudness = OwnController->GetMaxLoud() - OwnFeatures.Smart;
-
-	bCrouch = false;
+	if (OwnController)
+	{
+		StoneSpread = OwnController->GetMaxAimPrecision() - OwnFeatures.AimPrecision;
+		Loudness = OwnController->GetMaxLoud() - OwnFeatures.Smart;
+		Solidity = OwnController->GetMaxStrenght() - OwnFeatures.Strength;
+		bCrouch = false;
+	}
+	else
+	{
+		Solidity = 10 - OwnFeatures.Strength;
+		Loudness = 1 - OwnFeatures.Smart;
+		StoneSpread = 10 - OwnFeatures.AimPrecision;
+	}
 	
 
 }
@@ -161,9 +181,15 @@ void AFPSMannequin::HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherAc
 		bIsheadshot = true;
 		bMoving = false;
 
-
+		FName AnimSectionName = TM_ShotDirection[HitDegree];
+		LOG_S(FString::Printf(TEXT("Head Hit Stone Solidity_1 = %f"), Solidity));
+		int32 sectionIndex = HeadShotAnim->GetSectionIndex(AnimSectionName);
 		PlayAnimMontage(HeadShotAnim, 1.f, TM_ShotDirection[HitDegree]);
-		
+
+		Solidity += HeadShotAnim->GetSectionLength(sectionIndex);
+		LOG_S(FString::Printf(TEXT("Head Hit Stone HeadShot Anim Lenght = %f"), HeadShotAnim->GetSectionLength(sectionIndex)));
+		LOG_S(FString::Printf(TEXT("Head Hit Stone Solidity_2 = %f"), Solidity));
+
 		FName AnimSlotname;
 		if (HitDegree == 0)
 		{
@@ -181,10 +207,12 @@ void AFPSMannequin::HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherAc
 			}
 		}
 		TimerDel.BindUFunction(this, FName("GetUp"), AnimSlotname);
-		GetWorld()->GetTimerManager().SetTimer(FTimer_HeadShotAnim, TimerDel, 5.f, false);
+		GetWorld()->GetTimerManager().SetTimer(FTimer_HeadShotAnim, TimerDel, Solidity, false);
 	}
 	
 }
+
+
 
 void AFPSMannequin::GetUp(FName slotname)
 {
@@ -204,6 +232,15 @@ void AFPSMannequin::Tick(float DeltaTime)
 	{
 		SetActorRotation(RandomPointRotation);
 	}
+
+	if (DebugPlayerRoleDrawing > 0)
+	{
+		if (Role == ROLE_Authority)
+			DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Server"), nullptr, FColor::Red, 10.f);
+		if (Role == ROLE_AutonomousProxy)
+			DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Client"), nullptr, FColor::Yellow, 10.f);
+	}
+
 }
 
 
