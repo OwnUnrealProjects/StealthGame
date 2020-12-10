@@ -181,44 +181,70 @@ void AFPSMannequin::HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherAc
 		bIsheadshot = true;
 		bMoving = false;
 
-		FName AnimSectionName = TM_ShotDirection[HitDegree];
+		AnimSlotname = TM_ShotDirection[HitDegree];
 		LOG_S(FString::Printf(TEXT("Head Hit Stone Solidity_1 = %f"), Solidity));
-		int32 sectionIndex = HeadShotAnim->GetSectionIndex(AnimSectionName);
-		PlayAnimMontage(HeadShotAnim, 1.f, TM_ShotDirection[HitDegree]);
+		int32 sectionIndex = HeadShotAnim->GetSectionIndex(AnimSlotname);
+		PlayAnimMontage(HeadShotAnim, 1.f, AnimSlotname);
 
 		Solidity += HeadShotAnim->GetSectionLength(sectionIndex);
 		LOG_S(FString::Printf(TEXT("Head Hit Stone HeadShot Anim Lenght = %f"), HeadShotAnim->GetSectionLength(sectionIndex)));
 		LOG_S(FString::Printf(TEXT("Head Hit Stone Solidity_2 = %f"), Solidity));
 
-		FName AnimSlotname;
-		if (HitDegree == 0)
-		{
-			AnimSlotname = FName("GetUp_F");
-		}
-		else
-		{
-			if (HeadShotAnim->IsValidSectionName(FName("GetUp_B")))
-			{
-				AnimSlotname = FName("GetUp_B");
-			}
-			else
-			{
-				AnimSlotname = FName("GetUp_F");
-			}
-		}
-		TimerDel.BindUFunction(this, FName("GetUp"), AnimSlotname);
-		GetWorld()->GetTimerManager().SetTimer(FTimer_HeadShotAnim, TimerDel, Solidity, false);
+		
+		/*TimerDel.BindUFunction(this, FName("GetUp"), AnimSlotname);
+		GetWorld()->GetTimerManager().SetTimer(FTimer_HeadShotAnim, TimerDel, Solidity, false);*/
+		GetWorldTimerManager().SetTimer(FTimer_HeadShotAnim, this, &AFPSMannequin::GetUp, Solidity);
 	}
 	
 }
 
 
-
-void AFPSMannequin::GetUp(FName slotname)
+void AFPSMannequin::GetUp()
 {
-	PlayAnimMontage(HeadShotAnim, 1.f, slotname);
+	if (HeadShotDirection == 0)
+	{
+		AnimSlotname = FName("GetUp_F");
+	}
+	else
+	{
+		if (HeadShotAnim->IsValidSectionName(FName("GetUp_B")))
+		{
+			AnimSlotname = FName("GetUp_B");
+		}
+		else
+		{
+			AnimSlotname = FName("GetUp_F");
+		}
+	}
+
+	PlayAnimMontage(HeadShotAnim, 1.f, AnimSlotname);
 	LOG_S(FString("Head Hit Stone GetUp"));
 }
+
+
+void AFPSMannequin::OnRep_HeadShot()
+{
+	if (Role == ROLE_Authority)
+	{
+		LOG_S(FString("OnOnRep_HeadShot Server"));
+		LOG_S(AnimSlotname.ToString());
+	}
+	if (Role == ROLE_AutonomousProxy)
+	{
+		LOG_S(FString("OnOnRep_HeadShot Client"));
+		LOG_S(AnimSlotname.ToString());
+	}
+	if (Role == ROLE_SimulatedProxy)
+	{
+		LOG_S(FString("OnOnRep_HeadShot Replicat"));
+		LOG_S(AnimSlotname.ToString());
+	}
+	LOG_S(FString("OnRep_HeadShot"));
+	bIsheadshot = true;
+	PlayAnimMontage(HeadShotAnim, 1.f, AnimSlotname);
+}
+
+
 
 // Called every frame
 void AFPSMannequin::Tick(float DeltaTime)
@@ -266,6 +292,8 @@ void AFPSMannequin::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AFPSMannequin, FireAnimPlayRate);
 	DOREPLIFETIME(AFPSMannequin, RandomPointRotation);
 	DOREPLIFETIME(AFPSMannequin, StoneSpread);
+	DOREPLIFETIME(AFPSMannequin, AnimSlotname);
+	DOREPLIFETIME_CONDITION(AFPSMannequin, HeadShotAnim, COND_OwnerOnly);
 
 }
 
@@ -416,6 +444,8 @@ bool AFPSMannequin::SR_UpdateAiming_Validate(bool val)
 	// TODO more clear
 	return true;
 }
+
+
 
 void AFPSMannequin::Fire()
 {

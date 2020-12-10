@@ -87,7 +87,7 @@ private:
 
 	/// HeadShot
 		UFUNCTION()
-		void GetUp(FName slotname);
+		void GetUp();
 		FTimerDelegate TimerDel;
 		FTimerHandle FTimer_HeadShotAnim;
 
@@ -159,13 +159,19 @@ protected:
 	/// Head Shot
 		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "HeadShot")
 		bool bIsheadshot;
+
+		UPROPERTY(ReplicatedUsing = OnRep_HeadShot)
+		FName AnimSlotname;
+		UFUNCTION()
+		void OnRep_HeadShot();
+
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HeadShot")
 		float HeadShotDirection;
 		/** Stand up time after Headshot */
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HeadShot")
 		float Solidity;
 
-		UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
+		UPROPERTY(Replicated, EditDefaultsOnly, Category = "Gameplay")
 		UAnimMontage* HeadShotAnim;
 
 
