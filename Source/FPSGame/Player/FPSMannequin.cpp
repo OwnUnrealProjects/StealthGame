@@ -98,6 +98,7 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 	MannequinNoiseEmitterComponent = CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("MannequinNoiseEmitterComponent"));
 
 
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AFPSMannequin::HitBody);
 	Tags.Add(FName("Player"));
 
 	bReplicates = true;
@@ -169,7 +170,7 @@ bool AFPSMannequin::SR_SetBeginPlayParams_Validate()
 void AFPSMannequin::HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 
-	if (!OtherActor)
+	if (!OtherActor || !ShotAnim)
 		return;
 	FName* StoneTag = OtherActor->Tags.GetData();
 	FString ST = StoneTag->GetPlainNameString();
@@ -178,16 +179,16 @@ void AFPSMannequin::HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherAc
 		float HitDegree = FPSMath::GetHitPointDirectionYaxis(Hit.ImpactPoint, HeadCollision->GetComponentLocation(), this);
 		LOG_S(FString::Printf(TEXT("Head Hit Stone HitDegree = %f"), HitDegree));
 		HeadShotDirection = HitDegree;
-		bIsheadshot = true;
+		bIsShot = true;
 		bMoving = false;
 
 		AnimSlotname = TM_ShotDirection[HitDegree];
 		LOG_S(FString::Printf(TEXT("Head Hit Stone Solidity_1 = %f"), Solidity));
-		int32 sectionIndex = HeadShotAnim->GetSectionIndex(AnimSlotname);
-		PlayAnimMontage(HeadShotAnim, 1.f, AnimSlotname);
+		int32 sectionIndex = ShotAnim->GetSectionIndex(AnimSlotname);
+		PlayAnimMontage(ShotAnim, 1.f, AnimSlotname);
 
-		Solidity += HeadShotAnim->GetSectionLength(sectionIndex);
-		LOG_S(FString::Printf(TEXT("Head Hit Stone HeadShot Anim Lenght = %f"), HeadShotAnim->GetSectionLength(sectionIndex)));
+		Solidity += ShotAnim->GetSectionLength(sectionIndex);
+		LOG_S(FString::Printf(TEXT("Head Hit Stone HeadShot Anim Lenght = %f"), ShotAnim->GetSectionLength(sectionIndex)));
 		LOG_S(FString::Printf(TEXT("Head Hit Stone Solidity_2 = %f"), Solidity));
 
 		
@@ -199,15 +200,36 @@ void AFPSMannequin::HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherAc
 }
 
 
+void AFPSMannequin::HitBody(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	//LOG_S(FString("Hit body"));
+	if (!OtherActor || !ShotAnim)
+		return;
+	if (OtherActor->Tags.Num() == 0)
+		return;
+
+	FName* StoneTag = OtherActor->Tags.GetData();
+	FString ST = StoneTag->GetPlainNameString();
+	if (ST == "Projectile")
+	{
+		bIsShot = true;
+		bMoving = false;
+		AnimSlotname = FName("Body");
+		LOG_S(FString::Printf(TEXT("Hit body Name = %s"), *AnimSlotname.ToString()));
+		PlayAnimMontage(ShotAnim, 1.f, AnimSlotname);
+	}
+
+}
+
 void AFPSMannequin::GetUp()
 {
 	if (HeadShotDirection == 0)
 	{
 		AnimSlotname = FName("GetUp_F");
 	}
-	else
+	if (HeadShotDirection == 180)
 	{
-		if (HeadShotAnim->IsValidSectionName(FName("GetUp_B")))
+		if (ShotAnim->IsValidSectionName(FName("GetUp_B")))
 		{
 			AnimSlotname = FName("GetUp_B");
 		}
@@ -217,31 +239,32 @@ void AFPSMannequin::GetUp()
 		}
 	}
 
-	PlayAnimMontage(HeadShotAnim, 1.f, AnimSlotname);
+	PlayAnimMontage(ShotAnim, 1.f, AnimSlotname);
 	LOG_S(FString("Head Hit Stone GetUp"));
 }
 
 
-void AFPSMannequin::OnRep_HeadShot()
+void AFPSMannequin::OnRep_ClientShot()
 {
 	if (Role == ROLE_Authority)
 	{
-		LOG_S(FString("OnOnRep_HeadShot Server"));
+		LOG_S(FString("OnRep_ClientShot Server"));
 		LOG_S(AnimSlotname.ToString());
 	}
 	if (Role == ROLE_AutonomousProxy)
 	{
-		LOG_S(FString("OnOnRep_HeadShot Client"));
+		LOG_S(FString("OnRep_ClientShot Client"));
 		LOG_S(AnimSlotname.ToString());
 	}
 	if (Role == ROLE_SimulatedProxy)
 	{
-		LOG_S(FString("OnOnRep_HeadShot Replicat"));
+		LOG_S(FString("OnRep_ClientShot Replicat"));
 		LOG_S(AnimSlotname.ToString());
 	}
-	LOG_S(FString("OnRep_HeadShot"));
-	bIsheadshot = true;
-	PlayAnimMontage(HeadShotAnim, 1.f, AnimSlotname);
+	LOG_S(FString("OnRep_ClientShot"));
+	bIsShot = true;
+	if(AnimSlotname != "None")
+		PlayAnimMontage(ShotAnim, 1.f, AnimSlotname);
 }
 
 
@@ -293,7 +316,7 @@ void AFPSMannequin::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AFPSMannequin, RandomPointRotation);
 	DOREPLIFETIME(AFPSMannequin, StoneSpread);
 	DOREPLIFETIME(AFPSMannequin, AnimSlotname);
-	DOREPLIFETIME_CONDITION(AFPSMannequin, HeadShotAnim, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AFPSMannequin, ShotAnim, COND_OwnerOnly);
 
 }
 

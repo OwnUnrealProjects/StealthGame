@@ -52,6 +52,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	
+private:
+
+	/** Stone hit Effect */
+	UPROPERTY(EditDefaultsOnly, Category = "Particle")
+	TMap<FName, UParticleSystem*> TM_ImpactParicles;
 	
 };

@@ -5,6 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Containers/Map.h"
 
 #include "../DebugTool/DebugLog.h"
 
@@ -72,6 +73,15 @@ void AFPSStone::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimiti
 		MakeNoise(1.f, Instigator); // Instigator set Fire() function
 		LOG_S(FString::Printf(TEXT("Sense Stone Hit Location = %s"), *GetActorLocation().ToString()));
 		Destroy();
+	}
+
+
+	if (OtherActor->Tags.Num() != 0)
+	{
+		FName TM_Key = OtherActor->Tags[0];
+		bool IsEmitter = TM_ImpactParicles.Contains(TM_Key);
+		if(IsEmitter)
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TM_ImpactParicles[TM_Key], Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 	}
 }
 

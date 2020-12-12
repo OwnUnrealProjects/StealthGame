@@ -158,12 +158,12 @@ protected:
 
 	/// Head Shot
 		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "HeadShot")
-		bool bIsheadshot;
+		bool bIsShot;
 
-		UPROPERTY(ReplicatedUsing = OnRep_HeadShot)
+		UPROPERTY(ReplicatedUsing = OnRep_ClientShot)
 		FName AnimSlotname;
 		UFUNCTION()
-		void OnRep_HeadShot();
+		void OnRep_ClientShot();
 
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HeadShot")
 		float HeadShotDirection;
@@ -171,8 +171,8 @@ protected:
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HeadShot")
 		float Solidity;
 
-		UPROPERTY(Replicated, EditDefaultsOnly, Category = "Gameplay")
-		UAnimMontage* HeadShotAnim;
+		UPROPERTY(Replicated, EditDefaultsOnly, Category = "HeadShot")
+		UAnimMontage* ShotAnim;
 
 
 public:
@@ -206,8 +206,13 @@ protected:
 	void SR_SetBeginPlayParams();
 
 	/// Shoot
-	UFUNCTION()
-	void HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+		// HeadShot
+		UFUNCTION()
+		void HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+		// BodyShot
+		UFUNCTION()
+		void HitBody(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 public:
 	
@@ -242,9 +247,9 @@ public:
 
 	/// HeadShot
 		UFUNCTION(BlueprintPure, Category = "HeadShot")
-		inline bool GetHeadShotPermission() { return bIsheadshot; }
+		inline bool GetShotPermission() { return bIsShot; }
 		UFUNCTION(BlueprintCallable, Category = "HeadShot")
-		void SetHeadShotPermisssion(bool val) { bIsheadshot = val; }
+		void SetShotPermisssion(bool val) { bIsShot = val; AnimSlotname = FName("None"); }
 		UFUNCTION(BlueprintPure, Category = "HeadShot")
 		inline float GetHeadShotDirection() { return HeadShotDirection; }
 
