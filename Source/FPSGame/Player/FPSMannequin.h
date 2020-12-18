@@ -19,6 +19,7 @@ class USpringArmComponent;
 class UFPSPlayerInput;
 class UFPSPlayerAiming;
 class UFPSPlayerFireComponent;
+class UFPSPlayerJump;
 class UTexture2D;
 enum  class EFightState : uint8;
 
@@ -115,6 +116,8 @@ protected:
 		UFPSPlayerAiming* MannequinAimingComponent;
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 		UFPSPlayerFireComponent* MannequinFireComponent;
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+		UFPSPlayerJump* MannequinJumpComponent;
 
 
 	/// Pawn Properties. I Set it in Blueprint
@@ -177,7 +180,7 @@ protected:
 
 public:
 	
-/// Replication
+/// RPC
 
 	/// FIRE 
 	UFUNCTION(BlueprintCallable, Category = "Fire")
@@ -198,6 +201,13 @@ public:
 
 		UFUNCTION(Server,Reliable,WithValidation)
 		void SR_RotateCroshairDirection(FRotator Direction);
+
+
+		UFUNCTION(Server, Reliable, WithValidation)
+		void SR_Crouch(bool UpdateCrouch);
+
+		UFUNCTION(Server, Reliable, WithValidation)
+		void SR_MakeStepNoise(bool enable);
 
 protected:
 
@@ -220,7 +230,7 @@ public:
 		// Geter and Seter of Permissions
 		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
 		inline bool GetPermissionCrouch() { return bCrouch; }
-		void SetPermissionCrouch(bool val);
+		void SetCrouchMode(bool val);
 
 		UFUNCTION(BlueprintPure, Category = "CharacterAnim")
 		inline bool GetPermissionMoving() { return bMoving; }
@@ -257,12 +267,6 @@ public:
 	/// We use it in FPSPlayerInput Class // Really I don't use it
 		bool IsFightAnimation() { return MannequinFireComponent->GetFightAnim() ? true : false; }
 		
-		// RPC
-		UFUNCTION(Server, Reliable, WithValidation)
-		void SR_Crouch(bool UpdateCrouch);
-
-		UFUNCTION(Server, Reliable, WithValidation)
-		void SR_MakeStepNoise(bool enable);
 
 		inline float GetDefalutMaxSpeed() { return OwnFeatures.MaxSpeed; }
 		inline float GetDefaultCrouchSpeed() { return OwnFeatures.CrouchSpeed; }
@@ -280,6 +284,11 @@ public:
 
 		UFUNCTION(BlueprintImplementableEvent, Category = "ChracterAnim")
 		void CanCrouched(bool Enable);
+
+	/// Jump
+		UPROPERTY(BlueprintReadOnly, Category = "Jump")
+		bool bJump;
+		void JumpEvent();
 
 
 	AFPSPlayerController* GetSelfController();
@@ -300,6 +309,8 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual void Landed(const FHitResult& Hit) override;
 
 
 };

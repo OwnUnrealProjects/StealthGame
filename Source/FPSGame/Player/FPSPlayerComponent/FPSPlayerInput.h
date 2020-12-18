@@ -95,6 +95,9 @@ private:
 
 	void StartFire();
 	void ApplyFireState();
+
+	// Jump
+	void Jump();
 	
 	void ApplyFightState(EFightState State);
 

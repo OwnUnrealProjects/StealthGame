@@ -3,7 +3,7 @@
 #pragma once
 
 //#include "CoreMinimal.h"
-
+#include "Kismet/GameplayStatics.h"
 #define DEBUGING 1
 #define DEBUGING_ENEBALE(x) DEBUGING x
 

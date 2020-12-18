@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FPSMannequin.h"
-#include "FPSPlayerComponent/FPSPlayerInput.h"
 #include "../DebugTool/DebugLog.h"
 #include "FPSPlayerComponent/FPSPlayerInput.h"
 #include "FPSPlayerComponent/FPSPlayerAiming.h"
 //#include "FPSPlayerComponent/FPSPlayerFireComponent.h"
+#include "FPSPlayerComponent/FPSPlayerJump.h"
 #include "../Public/FPSPlayerController.h"
 #include "../Projectile/FPSStone.h"
 #include "../FPSGame.h"
@@ -96,7 +96,7 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 	MannequinInputComponent = CreateDefaultSubobject<UFPSPlayerInput>(TEXT("MannequinInputComonent"));
 	MannequinFireComponent = CreateDefaultSubobject<UFPSPlayerFireComponent>(TEXT("MannequinFireComonent"));
 	MannequinNoiseEmitterComponent = CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("MannequinNoiseEmitterComponent"));
-
+	MannequinJumpComponent = CreateDefaultSubobject<UFPSPlayerJump>(TEXT("MannequinJumpComponent"));
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AFPSMannequin::HitBody);
 	Tags.Add(FName("Player"));
@@ -128,6 +128,7 @@ void AFPSMannequin::BeginPlay()
 	{
 		LOG_S(FString("Client"));
 	}
+
 }
 
 
@@ -339,7 +340,17 @@ void AFPSMannequin::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 
 
-void AFPSMannequin::SetPermissionCrouch(bool val)
+void AFPSMannequin::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	//LOG_S(FString("Jump Landed"));
+	MannequinJumpComponent->JumpDown();
+}
+
+
+
+void AFPSMannequin::SetCrouchMode(bool val)
 {
 	if(Role < ROLE_Authority)
 		SR_Crouch(val);
@@ -359,7 +370,7 @@ void AFPSMannequin::SetPermissionCrouch(bool val)
 
 void AFPSMannequin::SR_Crouch_Implementation(bool UpdateCrouch)
 {
-	SetPermissionCrouch(UpdateCrouch);
+	SetCrouchMode(UpdateCrouch);
 }
 
 
@@ -499,6 +510,10 @@ bool AFPSMannequin::SR_Fire_Validate()
 }
 
 
+void AFPSMannequin::JumpEvent()
+{
+	MannequinJumpComponent->JumpUp();
+}
 
 
 

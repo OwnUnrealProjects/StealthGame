@@ -86,6 +86,7 @@ void UFPSPlayerInput::SetupInputComponent(UInputComponent* Input)
 		Input->BindAction("Aiming", IE_Pressed, this, &UFPSPlayerInput::StartAiming);
 		Input->BindAction("Aiming", IE_Released, this, &UFPSPlayerInput::UndoAiming);
 		Input->BindAction("Fire", IE_Pressed, this, &UFPSPlayerInput::StartFire);
+		Input->BindAction("Jump", IE_Pressed, this, &UFPSPlayerInput::Jump);
 		UE_LOG(LogTemp, Error, TEXT("%s - has Component InputComponent..."), *GetOwner()->GetName())
 	}
 	else
@@ -175,7 +176,7 @@ void UFPSPlayerInput::MoveForward(float Val)
 		{
 			Player->SR_MakeStepNoise(true);
 		}
-
+		//LOG_S(FString("Move ..."));
 	}
 	
 
@@ -214,7 +215,7 @@ void UFPSPlayerInput::Crouch()
 	Player->GetCharacterMovement()->MaxWalkSpeed = Player->GetDefaultCrouchSpeed();
 	//Player->CanCrouched(true);
 	Player->bIsCrouched = true;
-	Player->SetPermissionCrouch(true);
+	Player->SetCrouchMode(true);
 }
 
 void UFPSPlayerInput::UnCrouch()
@@ -222,7 +223,7 @@ void UFPSPlayerInput::UnCrouch()
 	Player->GetCharacterMovement()->MaxWalkSpeed = Player->GetDefalutMaxSpeed();
 	//Player->CanCrouched(false);
 	Player->bIsCrouched = false;
-	Player->SetPermissionCrouch(false);
+	Player->SetCrouchMode(false);
 }
 
 void UFPSPlayerInput::StartAiming()
@@ -350,6 +351,10 @@ void UFPSPlayerInput::ApplyFireState()
 	}*/
 }
 
+void UFPSPlayerInput::Jump()
+{
+	Player->JumpEvent();
+}
 
 
 
