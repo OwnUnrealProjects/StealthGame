@@ -6,3 +6,4 @@
 
 #define COLLISION_AIM      ECC_GameTraceChannel2
 #define COLLISION_Jump     ECC_GameTraceChannel5
+

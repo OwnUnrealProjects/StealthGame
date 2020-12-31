@@ -9,12 +9,26 @@
 class AFPSMannequin;
 class UAnimMontage;
 
-UENUM()
-enum  class EJumpState : uint8
+//UENUM()
+//enum  class EJumpState : uint8
+//{
+//	None,
+//	Jump,
+//	HangOn
+//};
+
+
+USTRUCT()
+struct FJumpData
 {
-	None,
-	Jump,
-	Climbing
+	GENERATED_USTRUCT_BODY()
+
+public:
+
+	UPROPERTY()
+	FVector_NetQuantize TargetLocation;
+	UPROPERTY()
+	FRotator TargetRotation;
 };
 
 
@@ -34,7 +48,34 @@ protected:
 
 	void SetJumpMode(bool val);
 	UFUNCTION(Server, Reliable, WithValidation)
-	void SR_Jump(bool val);
+	void SR_JumpMode(bool val);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void SR_Jump();
+	UFUNCTION(NetMulticast, Reliable)
+	void MC_Jump();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void SR_JumpDown();
+	UFUNCTION(NetMulticast, Reliable)
+	void MC_JumpDown();
+
+
+	void HangOnLedge();
+	void ClimbOnLedge();
+	void ClimbFinished();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MC_HangOnLedge();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void SR_ClimbOnLedge();
+	UFUNCTION(NetMulticast, Reliable)
+	void MC_ClimbOnLedge();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void SR_CalculateJumpState();
+
+
 
 protected:
 	// Called when the game starts
@@ -45,20 +86,22 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 private:
 
-	void JumpOnLedge();
-	void HangOnLedge();
-	void ClimbOnLedge();
-	void ClimbFinished();
+
 
 	UFUNCTION()
 	void MoveToTargetFinished();
 
-	EJumpState CalculateJumpState();
+	//EJumpState CalculateJumpState();
+
+	bool ForwardTracer();
 
 	int32 GetNextUUID() { return NextUUID++; }
 
-	FVector CalculateTargetLocation();
-	FRotator CalculateTargetRotation();
+	FVector CalculateHangOnLocation();
+	FRotator CalculateHangOnRotation();
+
+	void CalculateJumpData();
+
 
 private:
 
@@ -71,20 +114,39 @@ private:
 	UAnimMontage* ClimbAnim;
 
 
-	bool IsCharacterJump;
-	bool IsHangOn = false;
 
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool DrawDebugJumpLine;
 
 
-	EJumpState JumpState = EJumpState::None;
+	
 
 	float MaxJumpLength = 200.f;
+	float InnerTraceDeep = 50;
+
+	UPROPERTY(Replicated)
+	bool IsHeigthLedge = false;
+	UPROPERTY(Replicated)
+	bool IsCharacterJump;
+	UPROPERTY(Replicated)
+	FHitResult HitLedgeUp;
+	UPROPERTY(Replicated)
+	FJumpData JumpData;
+
+
+
+
+	//UPROPERTY(Replicated)
+	bool SuccessLineTrace;
+	//UPROPERTY(Replicated)
 	float LedgeLength;
-	FHitResult HitLedge;
+	UPROPERTY(Replicated)
 	FVector WallLocation;
+	UPROPERTY(Replicated)
 	FVector WallNormal;
+	
+	
+
 
 	FName Socket = FName("PelvisSokect");
 
@@ -92,5 +154,6 @@ private:
 
 	FTimerDelegate TimerDel;
 	FTimerHandle TimerHandle_Climb;
+
 	
 };

@@ -20,6 +20,7 @@ class UFPSPlayerInput;
 class UFPSPlayerAiming;
 class UFPSPlayerFireComponent;
 class UFPSPlayerJump;
+class UFPSPlayerClimb;
 class UTexture2D;
 enum  class EFightState : uint8;
 
@@ -102,7 +103,9 @@ protected:
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 		UCameraComponent* CameraComponent;
 		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Aiming")
-		UArrowComponent* StoneSpawnPoint;
+		UArrowComponent* LeftArrowLedge;
+		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Aiming")
+		UArrowComponent* RightArrowLedge;
 		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Collision")
 		UCapsuleComponent* HeadCollision;
 
@@ -118,6 +121,8 @@ protected:
 		UFPSPlayerFireComponent* MannequinFireComponent;
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 		UFPSPlayerJump* MannequinJumpComponent;
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+		UFPSPlayerClimb* MannequinClimbComponent;
 
 
 	/// Pawn Properties. I Set it in Blueprint
@@ -159,6 +164,7 @@ protected:
 		UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
 		float StoneSpread;
 
+
 	/// Head Shot
 		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "HeadShot")
 		bool bIsShot;
@@ -176,6 +182,19 @@ protected:
 
 		UPROPERTY(Replicated, EditDefaultsOnly, Category = "HeadShot")
 		UAnimMontage* ShotAnim;
+
+public:
+
+	/// Jump and Climb
+		UPROPERTY(Replicated, BlueprintReadOnly, Category = "ClimbAnim")
+		bool bHangOnLedge = false;
+		UPROPERTY(Replicated, BlueprintReadOnly, Category = "ClimbAnim")
+		float InForward;
+		UPROPERTY(Replicated, BlueprintReadOnly, Category = "ClimbAnim")
+		float InRight;
+		/** I need it: When exit ledge not calculate LineTrace */
+		UPROPERTY(Replicated)
+		bool IsExitLedge = false;
 
 
 public:
@@ -251,8 +270,13 @@ public:
 
 		inline void SetClientRandomFireRotation(bool val) { ClientRandomFireRotate = val; }
 		inline float GetFireAnimPlayRate() { return FireAnimPlayRate; }
-		inline UArrowComponent* GetStoneSpawnPointComponent() { return StoneSpawnPoint; }
+		inline UArrowComponent* GetLeftArrowComponent() { return LeftArrowLedge; }
+		inline UArrowComponent* GetRightArrowComponent() { return RightArrowLedge; }
 		inline UFPSPlayerAiming* GetAimingComponent() { return MannequinAimingComponent; }
+
+		UFUNCTION(BlueprintCallable, Category = "Climb")
+		inline UFPSPlayerClimb* GetClimbingComponent() { return MannequinClimbComponent; }
+
 		inline float GetBulletSpread() { return StoneSpread; }
 
 	/// HeadShot
@@ -286,7 +310,7 @@ public:
 		void CanCrouched(bool Enable);
 
 	/// Jump
-		UPROPERTY(BlueprintReadOnly, Category = "Jump")
+		UPROPERTY(Replicated, BlueprintReadOnly, Category = "Jump")
 		bool bJump;
 		void JumpEvent();
 
@@ -311,6 +335,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void Landed(const FHitResult& Hit) override;
+	UPROPERTY(ReplicatedUSing = OnRep_Landed)
+	bool IsLanded = false;
+	UFUNCTION()
+	void OnRep_Landed();
 
 
 };

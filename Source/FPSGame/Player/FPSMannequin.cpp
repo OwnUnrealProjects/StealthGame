@@ -6,6 +6,7 @@
 #include "FPSPlayerComponent/FPSPlayerAiming.h"
 //#include "FPSPlayerComponent/FPSPlayerFireComponent.h"
 #include "FPSPlayerComponent/FPSPlayerJump.h"
+#include "FPSPlayerComponent/FPSPlayerClimb.h"
 #include "../Public/FPSPlayerController.h"
 #include "../Projectile/FPSStone.h"
 #include "../FPSGame.h"
@@ -67,11 +68,17 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 	CameraComponent->RelativeRotation = FRotator(-15,-10,0);
 
 
-	StoneSpawnPoint = ObjectInitializer.CreateDefaultSubobject<UArrowComponent>(this, TEXT("ArrowPoint"));
-	StoneSpawnPoint->SetupAttachment(GetMesh());
-	StoneSpawnPoint->RelativeLocation = FVector(-59, 49, 150);
-	StoneSpawnPoint->RelativeRotation = FRotator(0, 0, 90);
-	StoneSpawnPoint->SetIsReplicated(true);
+	LeftArrowLedge = ObjectInitializer.CreateDefaultSubobject<UArrowComponent>(this, TEXT("LeftArrow"));
+	LeftArrowLedge->SetupAttachment(RootComponent);
+	LeftArrowLedge->RelativeLocation = FVector(35, -70, 35);
+	LeftArrowLedge->RelativeRotation = FRotator(0, 0, 0);
+	LeftArrowLedge->SetIsReplicated(true);
+
+	RightArrowLedge = ObjectInitializer.CreateDefaultSubobject<UArrowComponent>(this, TEXT("RightArrow"));
+	RightArrowLedge->SetupAttachment(RootComponent);
+	RightArrowLedge->RelativeLocation = FVector(35, 70, 35);
+	RightArrowLedge->RelativeRotation = FRotator(0, 0, 0);
+	RightArrowLedge->SetIsReplicated(true);
 	
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -97,6 +104,7 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 	MannequinFireComponent = CreateDefaultSubobject<UFPSPlayerFireComponent>(TEXT("MannequinFireComonent"));
 	MannequinNoiseEmitterComponent = CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("MannequinNoiseEmitterComponent"));
 	MannequinJumpComponent = CreateDefaultSubobject<UFPSPlayerJump>(TEXT("MannequinJumpComponent"));
+	MannequinClimbComponent = CreateDefaultSubobject<UFPSPlayerClimb>(TEXT("MannequinClimbComponent"));
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AFPSMannequin::HitBody);
 	Tags.Add(FName("Player"));
@@ -104,7 +112,7 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 	bReplicates = true;
 	bReplicateMovement = true;
 
-
+	//NetUpdateFrequency = 1.f;
 }
 
 
@@ -291,6 +299,8 @@ void AFPSMannequin::Tick(float DeltaTime)
 			DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 200), FString("Client"), nullptr, FColor::Yellow, 10.f);
 	}
 
+	//LOG_F(OwnFeatures.MaxSpeed);
+
 }
 
 
@@ -318,6 +328,12 @@ void AFPSMannequin::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AFPSMannequin, StoneSpread);
 	DOREPLIFETIME(AFPSMannequin, AnimSlotname);
 	DOREPLIFETIME_CONDITION(AFPSMannequin, ShotAnim, COND_OwnerOnly);
+	DOREPLIFETIME(AFPSMannequin, bHangOnLedge);
+	DOREPLIFETIME(AFPSMannequin, InForward);
+	DOREPLIFETIME(AFPSMannequin, InRight);
+	DOREPLIFETIME(AFPSMannequin, IsExitLedge);
+	DOREPLIFETIME_CONDITION(AFPSMannequin, IsLanded, COND_OwnerOnly);
+	DOREPLIFETIME(AFPSMannequin, bJump)
 
 }
 
@@ -344,11 +360,28 @@ void AFPSMannequin::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
 
-	//LOG_S(FString("Jump Landed"));
-	MannequinJumpComponent->JumpDown();
+	if (Role == ROLE_Authority)
+	{
+		IsLanded = !IsLanded;
+		if(Role == ROLE_Authority)
+			LOG_S(FString::Printf(TEXT("Server Jump Landed IsLanded = %i"), IsLanded));
+		if(Role == ROLE_AutonomousProxy)
+			LOG_S(FString("Client Jump Landed"));
+		MannequinJumpComponent->JumpDown();
+	}
+	
 }
 
 
+
+void AFPSMannequin::OnRep_Landed()
+{
+	MannequinJumpComponent->JumpDown();
+	if (Role == ROLE_Authority)
+		LOG_S(FString("Server Jump Landed OnRep"));
+	if (Role == ROLE_AutonomousProxy)
+		LOG_S(FString::Printf(TEXT("Client Jump Landed OnRep IsLanded = %i"), IsLanded));
+}
 
 void AFPSMannequin::SetCrouchMode(bool val)
 {

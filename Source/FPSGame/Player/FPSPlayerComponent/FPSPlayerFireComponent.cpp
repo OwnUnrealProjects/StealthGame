@@ -254,7 +254,6 @@ void UFPSPlayerFireComponent::FireStone()
 
 			/// Get Location & Speed
 			StoneSpawnLocation = Player->GetMesh()->GetSocketLocation("StoneStartPoint");
-			//StoneSpawnLocation = Player->GetStoneSpawnPointComponent()->GetComponentLocation();
 			StoneEndLocation = Player->GetAimingComponent()->GetLineTraceEndPoint();
 			StoneSpeed = Player->GetAimingComponent()->GetLineTraceLength() / 2;
 			/*LOG_S(FString("TTT SR_Fire_Implementation"));
@@ -296,7 +295,8 @@ void UFPSPlayerFireComponent::FireStone()
 		}
 		else
 		{
-			StoneSpawnLocation = Player->GetStoneSpawnPointComponent()->GetComponentLocation();
+			//StoneSpawnLocation = Player->GetStoneSpawnPointComponent()->GetComponentLocation();
+			StoneSpawnLocation = Player->GetMesh()->GetSocketLocation("StoneStartPoint");
 			float PitchVal = FMath::RandRange(1.f, 3.f);
 			StoneRotation = FRotator(PitchVal, Player->GetActorRotation().Yaw, 0);
 

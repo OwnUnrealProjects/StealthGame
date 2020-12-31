@@ -179,9 +179,9 @@ void UFPSPlayerInput::MoveForward(float Val)
 		//LOG_S(FString("Move ..."));
 	}
 	
+	Player->InForward = Val;
 
-
-	//LOG_I(Player->bMoving);
+	LOG_S(FString("ClimbComponent InputForward"));
 }
 
 void UFPSPlayerInput::MoveRight(float Val)
@@ -207,6 +207,8 @@ void UFPSPlayerInput::MoveRight(float Val)
 			Player->SR_MakeStepNoise(true);
 		}
 	}
+
+	Player->InRight = Val;
 	
 }
 
@@ -228,8 +230,8 @@ void UFPSPlayerInput::UnCrouch()
 
 void UFPSPlayerInput::StartAiming()
 {
-	FightState = EFightState::Aim;
-	ApplyFightState(FightState);
+	//FightState = EFightState::Aim;
+	ApplyFightState(EFightState::Aim);
 }
 
 void UFPSPlayerInput::UndoAiming()
@@ -237,8 +239,8 @@ void UFPSPlayerInput::UndoAiming()
 	switch (FightState)
 	{	
 	case EFightState::Aim:
-		FightState = EFightState::UndoAim;
-		ApplyFightState(FightState);
+		//FightState = EFightState::UndoAim;
+		ApplyFightState(EFightState::UndoAim);
 		break;
 	default:
 		break;
@@ -247,40 +249,42 @@ void UFPSPlayerInput::UndoAiming()
 
 void UFPSPlayerInput::StartFire()
 {
-	//FightState = EFightState::None;
-	FightState = EFightState::Fire;
-	ApplyFightState(FightState);
-	//OnRep_FightAnim();
+	//FightState = EFightState::Fire;
+	ApplyFightState(EFightState::Fire);
 }
 
 
 void UFPSPlayerInput::ApplyFightState(EFightState State)
 {
 	
-	switch (State)
+	if (!Player->bHangOnLedge)
 	{
-	case EFightState::None:
-		break;
-	case EFightState::Aim:
-		ApplyAimState();
-		//DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("AimState"), nullptr, FColor::Red, 10.f);
-		break;
-	case EFightState::UndoAim:
-		ApplyUndoAimState();
-		//DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("UndoAimState"), nullptr, FColor::Red, 10.f);
-		break;
-	case EFightState::Fire:
-		ApplyFireState();
-		//DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("FireState"), nullptr, FColor::Red, 10.f);
-		break;
-	default:
-		break;
+		switch (State)
+			{
+			case EFightState::None:
+				break;
+			case EFightState::Aim:
+				ApplyAimState();
+				//DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("AimState"), nullptr, FColor::Red, 10.f);
+				break;
+			case EFightState::UndoAim:
+				ApplyUndoAimState();
+				//DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("UndoAimState"), nullptr, FColor::Red, 10.f);
+				break;
+			case EFightState::Fire:
+				ApplyFireState();
+				//DrawDebugString(GetWorld(), Player->GetActorLocation() + FVector(0, 0, 200), FString("FireState"), nullptr, FColor::Red, 10.f);
+				break;
+			default:
+				break;
+			}
 	}
 }
 
 
 void UFPSPlayerInput::ApplyAimState()
 {
+	FightState = EFightState::Aim;
 	Player->bUseControllerRotationYaw = true;
 	Player->SetPermissionMoving(false);
 	Player->PlayFightAnim(FightState);
@@ -296,6 +300,7 @@ void UFPSPlayerInput::ApplyAimState()
 
 void UFPSPlayerInput::ApplyUndoAimState()
 {
+	FightState = EFightState::UndoAim;
 	Player->bUseControllerRotationYaw = false;
 	Player->SetPermissionMoving(true);
 	Player->PlayFightAnim(FightState);
@@ -319,6 +324,7 @@ void UFPSPlayerInput::DestroyAimPoint()
 
 void UFPSPlayerInput::ApplyFireState()
 {
+	FightState = EFightState::Fire;
 	Player->PlayFightAnim(FightState);
 	Player->SetPermissionFire(true);
 	Player->SetPermissionMoving(false);

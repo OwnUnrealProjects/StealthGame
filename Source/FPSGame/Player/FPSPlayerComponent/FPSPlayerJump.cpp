@@ -8,6 +8,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/CapsuleComponent.h"
+#include "Net/UnrealNetwork.h"
 
 #define OUT
 
@@ -19,7 +20,10 @@ UFPSPlayerJump::UFPSPlayerJump()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	// ...
+
+	bReplicates = true;
 }
+
 
 
 
@@ -29,7 +33,6 @@ void UFPSPlayerJump::BeginPlay()
 	Super::BeginPlay();
 
 	Player = Cast<AFPSMannequin>(GetOwner());
-	
 }
 
 
@@ -37,67 +40,162 @@ void UFPSPlayerJump::BeginPlay()
 void UFPSPlayerJump::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	
 
 	IsCharacterJump = Player->GetCharacterMovement()->IsFalling();
 	if (IsCharacterJump)
 	{
-		LOG_I(IsCharacterJump);
-		switch (JumpState)
+		/*if (Player->Role == ROLE_Authority)
+			LOG_S(FString::Printf(TEXT("Server ActorLocation = %s"), *Player->GetActorLocation().ToString()));
+		if (Player->Role == ROLE_AutonomousProxy)
+			LOG_S(FString::Printf(TEXT("Clinet ActorLocation = %s"), *Player->GetActorLocation().ToString()));
+		if (Player->Role == ROLE_SimulatedProxy)
+			LOG_S(FString::Printf(TEXT("Simulated Proxy Wall Locaton = ")))*/
+		
+		if (IsHeigthLedge)
 		{
-		case EJumpState::None:
-			//LOG_S(FString("None = JumpState"))
-				break;
-		case EJumpState::Jump:
-			JumpOnLedge();
-			//LOG_S(FString("Jump = JumpState"))
-				break;
-		case EJumpState::Climbing:
+			/*if (Player->Role == ROLE_Authority)
+				LOG_S(FString::Printf(TEXT("Server WallLocation ClimbOnLedge = %s JumpDataLocaton = %s"), *WallLocation.ToString(), *JumpData.TargetLocation.ToString()));
+			if (Player->Role == ROLE_AutonomousProxy)
+				LOG_S(FString::Printf(TEXT("Clinet WallLocation ClimbOnLedge = %s JumpDataLocaton = %s"), *WallLocation.ToString(), *JumpData.TargetLocation.ToString()));
+			if (Player->Role == ROLE_SimulatedProxy)
+				if (Player->Role == ROLE_SimulatedProxy)
+					LOG_S(FString::Printf(TEXT("SimulatedProxy WallLocation MC_HangOn = %s JumpDataLocaton = %s"), *WallLocation.ToString(), *JumpData.TargetLocation.ToString()));
+*/
+			// Executed Client and Server
 			HangOnLedge();
-			//LOG_S(FString("Hang = JumpState"));
-			break;
-		default:
-			break;
 		}
+			
 	}
-	//LOG_I(IsCharacterJump);
+
 }
 
+
+
+
+void UFPSPlayerJump::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UFPSPlayerJump, IsCharacterJump);
+	//DOREPLIFETIME(UFPSPlayerJump, SuccessLineTrace);
+	//DOREPLIFETIME(UFPSPlayerJump, LedgeLength);
+	DOREPLIFETIME(UFPSPlayerJump, HitLedgeUp);
+	DOREPLIFETIME(UFPSPlayerJump, WallLocation);
+	DOREPLIFETIME(UFPSPlayerJump, WallNormal);
+	DOREPLIFETIME(UFPSPlayerJump, IsHeigthLedge);
+	DOREPLIFETIME(UFPSPlayerJump, JumpData);
+
+
+}
 
 
 
 void UFPSPlayerJump::JumpUp()
 {
-	if (IsHangOn)
+	if (Player->bHangOnLedge)
 	{
-		ClimbOnLedge();
+
+		SetJumpMode(true);
+		SR_ClimbOnLedge();
+		if (Player->Role == ROLE_AutonomousProxy)
+			ClimbOnLedge();
+
 	}
 	else
 	{
-		SetJumpMode(true);
-		Player->PlayAnimMontage(JumpAnim, 1.f, "JumpUp");
-		//LOG_S(FString("Jump Up"));
 
-		JumpState = CalculateJumpState();
+		if (!Player->IsExitLedge/* && Player->Role < ROLE_Authority*/)
+			SR_CalculateJumpState();
+
+
+		if (Player->Role < ROLE_Authority)
+		{
+			SetJumpMode(true);
+			Player->PlayAnimMontage(JumpAnim, 1.f, "JumpUp");
+			//JumpState = CalculateJumpState();
+
+		}
+
+		SR_Jump();
 	}
 }
 
-
-void UFPSPlayerJump::JumpDown()
+void UFPSPlayerJump::SR_Jump_Implementation()
 {
-	LOG_S(FString("Jump And JumpDown"));
-	SetJumpMode(false);
-	Player->PlayAnimMontage(JumpAnim, 1.5f, "JumpDown");
+	SetJumpMode(true);
+	Player->PlayAnimMontage(JumpAnim, 1.f, "JumpUp");
 
-	JumpState = EJumpState::None;
-	IsHangOn = false;
+	MC_Jump();
+}
+
+bool UFPSPlayerJump::SR_Jump_Validate()
+{
+	return true;
 }
 
 
+
+void UFPSPlayerJump::MC_Jump_Implementation()
+{
+	if (!Player->IsLocallyControlled())
+	{
+		//SetJumpMode(true);
+		Player->PlayAnimMontage(JumpAnim, 1.f, "JumpUp");
+		LOG_S(FString("MC_Jump"));
+	}
+}
+
+void UFPSPlayerJump::JumpDown()
+{
+
+	LOG_S(FString("Jump And JumpDown"));
+
+	if (Player->Role < ROLE_Authority)
+	{
+		SetJumpMode(false);
+		Player->PlayAnimMontage(JumpAnim, 1.5f, "JumpDown");
+	}
+	
+
+
+	IsHeigthLedge = false;
+	Player->bHangOnLedge = false;
+	Player->IsExitLedge = false;
+	NextUUID = 0;
+
+	SR_JumpDown();
+}
+
+void UFPSPlayerJump::SR_JumpDown_Implementation()
+{
+	Player->PlayAnimMontage(JumpAnim, 1.5f, "JumpDown");
+	SetJumpMode(false);
+
+	MC_JumpDown();
+}
+
+bool UFPSPlayerJump::SR_JumpDown_Validate()
+{
+	return true;
+}
+
+
+void UFPSPlayerJump::MC_JumpDown_Implementation()
+{
+	if (Player && !Player->IsLocallyControlled())
+	{
+		// Called Only SimulatedProxy
+		SetJumpMode(false);
+		Player->PlayAnimMontage(JumpAnim, 1.f, "JumpDown");
+		LOG_S(FString("MC_Jump"));
+	}
+}
 
 void UFPSPlayerJump::SetJumpMode(bool val)
 {
 	if (Player->Role < ROLE_Authority)
-		SR_Jump(val);
+		SR_JumpMode(val);
 
 	Player->bJump = val;
 	if (Player->bJump)
@@ -110,125 +208,242 @@ void UFPSPlayerJump::SetJumpMode(bool val)
 	}
 }
 
-void UFPSPlayerJump::SR_Jump_Implementation(bool val)
+void UFPSPlayerJump::SR_JumpMode_Implementation(bool val)
 {
 	SetJumpMode(val);
-	if (val)
+}
+
+bool UFPSPlayerJump::SR_JumpMode_Validate(bool val)
+{
+	if (Player->GetCharacterMovement()->MaxWalkSpeed < 200 || Player->GetCharacterMovement()->MaxWalkSpeed > Player->GetDefalutMaxSpeed())
 	{
-		Player->PlayAnimMontage(JumpAnim, 1.f, "JumpUp");
+		return false;
 	}
 	else
 	{
-		Player->PlayAnimMontage(JumpAnim, 1.5f, "JumpDown");
+		return true;
 	}
-	
-}
-
-bool UFPSPlayerJump::SR_Jump_Validate(bool val)
-{
-	return true;
 }
 
 
-void UFPSPlayerJump::JumpOnLedge()
-{
-	//bJumpOnce = true;
 
-	FVector MoveLocation = HitLedge.ImpactPoint;
-	MoveLocation.Z += Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(); // It's same CapsulHalfHeight
-
-
-
-	FLatentActionInfo JumpOnInfo;
-	JumpOnInfo.CallbackTarget = this;
-	JumpOnInfo.Linkage = 0;
-	JumpOnInfo.UUID = GetNextUUID();
-
-	UKismetSystemLibrary::MoveComponentTo(
-		Player->GetCapsuleComponent(),
-		MoveLocation,
-		Player->GetActorRotation(),
-		false,
-		false,
-		0.3,
-		false,
-		EMoveComponentAction::Move,
-		JumpOnInfo
-	);
-
-	//bJumpOnce = false;
-	LOG_S(FString::Printf(TEXT("Jump And Move Time Secnde = %f"), UGameplayStatics::GetTimeSeconds(this)));
-
-
-
-}
 
 void UFPSPlayerJump::HangOnLedge()
 {
-	
-	FRotator TargetRotation = CalculateTargetRotation();
 
-	FVector TargetLocation = CalculateTargetLocation();
 
-	LOG_S(HitLedge.Location.ToString());
-	LOG_S(WallNormal.ToString());
-	Player->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+	if (Player->Role == ROLE_Authority)
+		MC_HangOnLedge();
 
-	FLatentActionInfo ClimbOnInfo;
-	ClimbOnInfo.CallbackTarget = this;
-	ClimbOnInfo.ExecutionFunction = FName("MoveToTargetFinished");
-	ClimbOnInfo.Linkage = 0;
-	ClimbOnInfo.UUID = GetNextUUID();
+
+
+	FLatentActionInfo HangOnInfo;
+	HangOnInfo.CallbackTarget = this;
+	HangOnInfo.ExecutionFunction = FName("MoveToTargetFinished");
+	HangOnInfo.Linkage = 0;
+	HangOnInfo.UUID = GetNextUUID();
 
 	UKismetSystemLibrary::MoveComponentTo(
 		Player->GetCapsuleComponent(),
-		TargetLocation,
-		TargetRotation/*Player->GetActorRotation()*/,
+		JumpData.TargetLocation,
+		JumpData.TargetRotation/*Player->GetActorRotation()*/,
 		false,
 		false,
 		0.5,
 		false,
 		EMoveComponentAction::Move,
-		ClimbOnInfo
+		HangOnInfo
 	);
 
-	IsHangOn = true;
-}
+	Player->bHangOnLedge = true;
+	IsHeigthLedge = false;
+	LOG_I(IsCharacterJump);
 
-void UFPSPlayerJump::ClimbOnLedge()
-{
-	Player->PlayAnimMontage(ClimbAnim, 1.f, "ClimbOn");
-	int32 sectionIndex = ClimbAnim->GetSectionIndex("ClimbOn");
-	float Timedelation = ClimbAnim->GetSectionLength(sectionIndex);
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle_Climb, this, &UFPSPlayerJump::ClimbFinished, Timedelation, false);
-	//Player->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-}
+	//UGameplayStatics::SetGlobalTimeDilation(Player, 0.1);
 
-void UFPSPlayerJump::ClimbFinished()
-{
-	Player->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	LOG_S(FString("Jump and Hand On"))
 }
 
 void UFPSPlayerJump::MoveToTargetFinished()
 {
-	
-	
+
+	/*if (Player->Role == ROLE_Authority)
+		LOG_S(FString::Printf(TEXT("Server Wall Locaton = %s"), *WallLocation.ToString()));
+	if (Player->Role == ROLE_AutonomousProxy)
+		LOG_S(FString::Printf(TEXT("Clinet Wall Locaton = %s"), *WallLocation.ToString()));
+	if (Player->Role == ROLE_SimulatedProxy)
+		LOG_S(FString::Printf(TEXT("Simulated Proxy Wall Locaton = ")))*/
+
+	Player->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+
 	Player->PlayAnimMontage(ClimbAnim, 1.f, "ClimbPose");
 	Player->GetCharacterMovement()->StopMovementImmediately();
 	LOG_S(FString::Printf(TEXT("Jump And MoveToTargetFinished Time Secnde = %f"), UGameplayStatics::GetTimeSeconds(this)));
+	IsHeigthLedge = false;
+
+
+	
 	//TimerDel.BindUFunction(this, FName("SetJumpState"), EJumpState::None);
 	//GetWorld()->GetTimerManager().SetTimer(TimerHandle_Climb, TimerDel, 1.f, false);
 	//GetWorld()->GetTimerManager().SetTimer(TimerHandle_Climb, this, &UFPSPlayerJump::FixToLedge, 0.5, false);
-
 	//UGameplayStatics::SetGlobalTimeDilation(Player, 0.1);
 }
 
-EJumpState UFPSPlayerJump::CalculateJumpState()
+void UFPSPlayerJump::MC_HangOnLedge_Implementation()
+{
+	if (Player->Role == ROLE_SimulatedProxy)
+	{
+		HangOnLedge();
+	}
+}
+
+void UFPSPlayerJump::ClimbOnLedge()
+{
+
+	if (Player->IsLocallyControlled())
+	{
+		Player->SetPermissionMoving(false);
+	}
+
+	Player->PlayAnimMontage(ClimbAnim, 1.f, "ClimbOn");
+	int32 sectionIndex = ClimbAnim->GetSectionIndex("ClimbOn");
+	float Timedelation = ClimbAnim->GetSectionLength(sectionIndex);
+	Player->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+	//UGameplayStatics::SetGlobalTimeDilation(Player, 0.1);
+
+
+	if (int(WallLocation.X) != int(Player->GetActorLocation().X) && int(WallLocation.Y) != int(Player->GetActorLocation().Y))
+	{
+		bool LineTrace = ForwardTracer();
+		if (!LineTrace)
+			return;
+
+	}
+
+	JumpData.TargetLocation.X = WallLocation.X;
+	JumpData.TargetLocation.Y = WallLocation.Y;
+	JumpData.TargetLocation.Z = HitLedgeUp.Location.Z + Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	JumpData.TargetLocation -= (Player->GetActorForwardVector() * 10);
+
+	FLatentActionInfo ClimbOnInfo;
+	ClimbOnInfo.CallbackTarget = this;
+	ClimbOnInfo.Linkage = 0;
+	ClimbOnInfo.UUID = GetNextUUID();
+
+
+
+	UKismetSystemLibrary::MoveComponentTo(
+		Player->GetCapsuleComponent(),
+		JumpData.TargetLocation,
+		JumpData.TargetRotation/*Player->GetActorRotation()*/,
+		false,
+		false,
+		0.7f,
+		false,
+		EMoveComponentAction::Move,
+		ClimbOnInfo
+	);
+
+
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle_Climb, this, &UFPSPlayerJump::ClimbFinished, Timedelation, false);
+}
+
+void UFPSPlayerJump::ClimbFinished()
+{
+
+	Player->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	Player->StopAnimMontage(ClimbAnim);
+	SetJumpMode(false);
+	Player->bHangOnLedge = false;
+
+	if (Player->IsLocallyControlled())
+	{
+		Player->SetPermissionMoving(true);
+	}
+}
+
+
+
+void UFPSPlayerJump::SR_CalculateJumpState_Implementation()
 {
 	LedgeLength = 0;
 
+	SuccessLineTrace = ForwardTracer();
+
+
+	//LOG_S(FString::Printf(TEXT("Jump LTSC_1 = %i, LTSC_2 = %i"), LTSC_1, LTSC_2));
+	//LOG_F(LedgeLength);
+
+	FVector SocketLocation = Player->GetMesh()->GetSocketLocation(Socket);
+	float HipToLedge = SocketLocation.Z - HitLedgeUp.Location.Z;
+	//LOG_F(HipToLedge);
+
+	if (SuccessLineTrace && LedgeLength >= 80)
+	{
+		CalculateJumpData();
+		IsHeigthLedge = true;
+	}
+	else
+	{
+		IsHeigthLedge = false;
+	}
+}
+
+bool UFPSPlayerJump::SR_CalculateJumpState_Validate()
+{
+	return true;
+}
+
+
+
+void UFPSPlayerJump::SR_ClimbOnLedge_Implementation()
+{
+
+	/*if (int(WallLocation.X) != int(Player->GetActorLocation().X) && int(WallLocation.Y) != int(Player->GetActorLocation().Y))
+	{
+		bool LineTrace = ForwardTracer();
+		if (!LineTrace)
+			return;
+		
+	}
+
+	JumpData.TargetLocation.X = WallLocation.X;
+	JumpData.TargetLocation.Y = WallLocation.Y;
+	JumpData.TargetLocation.Z = HitLedgeUp.Location.Z + Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	JumpData.TargetLocation -= (Player->GetActorForwardVector() * 10);*/
+
+
+	ClimbOnLedge();
+	MC_ClimbOnLedge();
+}
+
+bool UFPSPlayerJump::SR_ClimbOnLedge_Validate()
+{
+	return true;
+}
+
+
+
+void UFPSPlayerJump::MC_ClimbOnLedge_Implementation()
+{
+	if (Player->Role == ROLE_SimulatedProxy)
+	{
+	
+		/*if (Player->Role == ROLE_Authority)
+			LOG_S(FString::Printf(TEXT("Server WallLocation MC = %s JumpDataLocaton = %s"), *WallLocation.ToString(), *JumpData.TargetLocation.ToString()));
+		if (Player->Role == ROLE_AutonomousProxy)
+			LOG_S(FString::Printf(TEXT("Clinet WallLocation MC = %s JumpDataLocaton = %s"), *WallLocation.ToString(), *JumpData.TargetLocation.ToString()));
+		if (Player->Role == ROLE_SimulatedProxy)
+			LOG_S(FString::Printf(TEXT("SimulatedProxy WallLocation MC = %s JumpDataLocaton = %s"), *WallLocation.ToString(), *JumpData.TargetLocation.ToString()));
+*/
+		ClimbOnLedge();
+	}
+}
+
+bool UFPSPlayerJump::ForwardTracer()
+{
 	FVector StartPoint = Player->GetActorLocation();
-	FVector EndPoint = (Player->GetActorForwardVector() * 200.f) + StartPoint;
+	FVector EndPoint = (Player->GetActorForwardVector() * 300.f) + StartPoint;
 
 
 	FCollisionQueryParams QueryParams;
@@ -250,6 +465,7 @@ EJumpState UFPSPlayerJump::CalculateJumpState()
 	WallNormal = Hit.ImpactNormal;
 	//LOG_S(WallNormal.ToString());
 
+
 	if (DrawDebugJumpLine)
 	{
 		DrawDebugLine(
@@ -262,6 +478,8 @@ EJumpState UFPSPlayerJump::CalculateJumpState()
 			0.f,
 			5.f
 		);
+
+		DrawDebugSphere(GetWorld(), WallLocation, 12, 6, FColor::Red, true, 10.f);
 	}
 
 	bool LTSC_2 = false;
@@ -269,11 +487,11 @@ EJumpState UFPSPlayerJump::CalculateJumpState()
 
 	if (LTSC_1)
 	{
-		FVector StartPoint = Hit.ImpactPoint + (Hit.ImpactNormal * -50) + FVector(0, 0, MaxJumpLength);
-		FVector EndPoint = Hit.ImpactPoint + (Hit.ImpactNormal * -50);
+		FVector StartPoint = Hit.ImpactPoint + (Hit.ImpactNormal * -InnerTraceDeep) + FVector(0, 0, MaxJumpLength);
+		FVector EndPoint = Hit.ImpactPoint + (Hit.ImpactNormal * -InnerTraceDeep);
 
 		LTSC_2 = GetWorld()->LineTraceSingleByChannel(
-			OUT HitLedge,
+			OUT HitLedgeUp,
 			StartPoint,
 			EndPoint,
 			COLLISION_Jump,
@@ -281,8 +499,8 @@ EJumpState UFPSPlayerJump::CalculateJumpState()
 		);
 
 
-		if(HitLedge.Distance != 0)
-			LedgeLength = MaxJumpLength - HitLedge.Distance;
+		if (HitLedgeUp.Distance != 0)
+			LedgeLength = MaxJumpLength - HitLedgeUp.Distance;
 
 
 		if (DrawDebugJumpLine)
@@ -300,53 +518,47 @@ EJumpState UFPSPlayerJump::CalculateJumpState()
 		}
 	}
 
-	//LOG_S(FString::Printf(TEXT("Jump LTSC_1 = %i, LTSC_2 = %i"), LTSC_1, LTSC_2));
-	//LOG_F(LedgeLength);
-
-	FVector SocketLocation = Player->GetMesh()->GetSocketLocation(Socket);
-	float HipToLedge = SocketLocation.Z - HitLedge.Location.Z;
-	//LOG_F(HipToLedge);
-
-	if (LTSC_2 && LedgeLength > 0)
-	{
-
-		if (LedgeLength <= 80)
-		{
-			return EJumpState::Jump;
-		}
-		else
-		{
-			return EJumpState::Climbing;
-		}
-
-	}
-	else
-	{
-		return EJumpState::None;
-	}
-
+	return LTSC_2;
 }
 
-FVector UFPSPlayerJump::CalculateTargetLocation()
+FVector UFPSPlayerJump::CalculateHangOnLocation()
 {
-	FVector MoveLocation = HitLedge.Location;
-	MoveLocation.Z -= Player->GetMesh()->GetSocketLocation(Socket).Z; //(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	FVector MoveLocation = HitLedgeUp.Location;
+	MoveLocation.Z -= (Player->GetMesh()->GetSocketLocation(Socket).Z + 45); //(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 
 	if (WallNormal.X > 0 || WallNormal.Y > 0)
 	{
-		MoveLocation.X = Player->GetMesh()->GetSocketLocation(Socket).X + 10;
-		MoveLocation.Y = Player->GetMesh()->GetSocketLocation(Socket).Y + 10;
+		if (WallNormal.X > 0)
+		{
+			MoveLocation.X = WallLocation.X + 35;
+		}
+		else
+		{
+			MoveLocation.Y = WallLocation.Y + 35;
+		}
+		
 	}
 	else
 	{
-		MoveLocation.X = Player->GetMesh()->GetSocketLocation(Socket).X - 10;
-		MoveLocation.Y = Player->GetMesh()->GetSocketLocation(Socket).Y - 10;
+	
+		if (WallNormal.X < 0)
+		{
+			MoveLocation.X = WallLocation.X - 35;
+		} 
+		else
+		{
+			MoveLocation.Y = WallLocation.Y - 35;
+		}
+		
 	}
+
+
 	
 	return MoveLocation;
 }
 
-FRotator UFPSPlayerJump::CalculateTargetRotation()
+
+FRotator UFPSPlayerJump::CalculateHangOnRotation()
 {
 	float Roll = Player->GetActorRotation().Roll;
 	float Pitch = Player->GetActorRotation().Pitch;
@@ -355,3 +567,58 @@ FRotator UFPSPlayerJump::CalculateTargetRotation()
 
 	return MoveRotation;
 }
+
+
+
+
+void UFPSPlayerJump::CalculateJumpData()
+{
+	
+	JumpData.TargetLocation = CalculateHangOnLocation();
+	JumpData.TargetRotation = CalculateHangOnRotation();
+
+	//return JumpData;
+}
+
+// =======================================
+
+
+
+//EJumpState UFPSPlayerJump::CalculateJumpState()
+//{
+//	/*if (Player->Role < ROLE_Authority)
+//		SR_CalculateJumpState();*/
+//
+//	LedgeLength = 0;
+//
+//	SuccessLineTrace = ForwardTracer();
+//
+//
+//	//LOG_S(FString::Printf(TEXT("Jump LTSC_1 = %i, LTSC_2 = %i"), LTSC_1, LTSC_2));
+//	//LOG_F(LedgeLength);
+//
+//	FVector SocketLocation = Player->GetMesh()->GetSocketLocation(Socket);
+//	float HipToLedge = SocketLocation.Z - HitLedge.Location.Z;
+//	//LOG_F(HipToLedge);
+//
+//	if (SuccessLineTrace && LedgeLength > 0)
+//	{
+//
+//		if (LedgeLength <= 80)
+//		{
+//			return EJumpState::Jump;
+//		}
+//		else
+//		{
+//			return EJumpState::HangOn;
+//		}
+//
+//	}
+//	else
+//	{
+//		return EJumpState::None;
+//	}
+//
+//
+//}
+
