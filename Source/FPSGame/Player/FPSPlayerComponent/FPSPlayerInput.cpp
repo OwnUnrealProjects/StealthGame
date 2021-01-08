@@ -180,7 +180,7 @@ void UFPSPlayerInput::MoveForward(float Val)
 	}
 	
 	Player->InForward = Val;
-
+	Player->SR_SetInForward(Val);
 	LOG_S(FString("ClimbComponent InputForward"));
 }
 
@@ -209,6 +209,7 @@ void UFPSPlayerInput::MoveRight(float Val)
 	}
 
 	Player->InRight = Val;
+	Player->SR_SetInRight(Val);
 	
 }
 

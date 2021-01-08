@@ -45,8 +45,18 @@ void UFPSPlayerClimb::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 
 
 	PlayerInputDirection = Player->InRight * Player->GetPermissionMoving();
+	SR_SetPlayerInputDirection(PlayerInputDirection);
+
 	if (Player->bHangOnLedge)
 	{
+
+		/*if (Player->Role == ROLE_Authority)
+			LOG_S(FString::Printf(TEXT("Server PlayerInRight = %f, PermisionMoving = %i, PlayerInputDirection = %f"), Player->InRight, Player->GetPermissionMoving(), PlayerInputDirection));
+		if (Player->Role == ROLE_AutonomousProxy)
+			LOG_S(FString::Printf(TEXT("Clinet PlayerInRight = %f, PermisionMoving = %i, PlayerInputDirection = %f"), Player->InRight, Player->GetPermissionMoving(), PlayerInputDirection));
+		if (Player->Role == ROLE_SimulatedProxy)
+			LOG_S(FString::Printf(TEXT("Simulated Proxy PlayerInRight = %f, PermisionMoving = %i, PlayerInputDirection = %f"), Player->InRight, Player->GetPermissionMoving(), PlayerInputDirection));
+*/
 		if (PlayerInputDirection < 0)
 		{
 			Player->bJump = false;
@@ -54,6 +64,7 @@ void UFPSPlayerClimb::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 		}
 		if (PlayerInputDirection > 0)
 		{
+
 			Player->bJump = false;
 			MoveLedgeRight(DeltaTime);
 		}
@@ -73,6 +84,7 @@ void UFPSPlayerClimb::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(UFPSPlayerClimb, CurrentV);
 	DOREPLIFETIME(UFPSPlayerClimb, TargetV);
 	DOREPLIFETIME(UFPSPlayerClimb, MoveLocation);
+	DOREPLIFETIME(UFPSPlayerClimb, PlayerInputDirection);
 
 }
 
@@ -205,6 +217,8 @@ void UFPSPlayerClimb::MoveLedgeLeft(float DeltaT)
 		ClimbSate = EClimbState::ClimbCorner;
 		LOG_S(FString("CornerTracer"))
 	}*/
+
+
 }
 
 void UFPSPlayerClimb::MoveLedgeRight(float DeltaT)
@@ -232,13 +246,42 @@ void UFPSPlayerClimb::MoveLedgeRight(float DeltaT)
 		ClimbSate = EClimbState::ClimbCorner;
 		Player->PlayAnimMontage(ClimbCornerAnim, 1.f, "CornerRight");
 	}*/
+
+
 }
 
 void UFPSPlayerClimb::ExitLedge()
 {
+	
+	
+	if (Player->Role == ROLE_AutonomousProxy)
+		SR_ExitLedge();
+		
 	Player->bHangOnLedge = false;
 	Player->IsExitLedge = true;
 	Player->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 	Player->JumpEvent();
+
+}
+
+void UFPSPlayerClimb::SR_ExitLedge_Implementation()
+{
+	ExitLedge();
+}
+
+bool UFPSPlayerClimb::SR_ExitLedge_Validate()
+{
+	return true;
+}
+
+void UFPSPlayerClimb::SR_SetPlayerInputDirection_Implementation(float val)
+{
+	LOG_F(val);
+	PlayerInputDirection = val;
+}
+
+bool UFPSPlayerClimb::SR_SetPlayerInputDirection_Validate(float val)
+{
+	return true;
 }
 

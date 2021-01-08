@@ -196,6 +196,10 @@ public:
 		UPROPERTY(Replicated)
 		bool IsExitLedge = false;
 
+		UFUNCTION(Server, Reliable, WithValidation)
+		void SR_SetInRight(float val);
+		UFUNCTION(Server, Reliable, WithValidation)
+		void SR_SetInForward(float val);
 
 public:
 	
@@ -314,6 +318,8 @@ public:
 		bool bJump;
 		void JumpEvent();
 
+		float GetPlayerHeight();
+		float GetDistanceToLedge();
 
 	AFPSPlayerController* GetSelfController();
 

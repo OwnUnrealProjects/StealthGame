@@ -54,6 +54,11 @@ private:
 	void MoveLedgeLeft(float DeltaT);
 	void MoveLedgeRight(float DeltaT);
 	void ExitLedge();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void SR_ExitLedge();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void SR_SetPlayerInputDirection(float val);
 
 private:
 
@@ -69,7 +74,6 @@ private:
 	/*bool CanMoveLeft;
 	bool CanMoveRight;*/
 
-
 	UPROPERTY(Replicated)
 	bool bMoveLeft;
 	UPROPERTY(Replicated)
@@ -82,6 +86,7 @@ private:
 	UPROPERTY(Replicated)
 	FVector MoveLocation;
 
+	UPROPERTY(Replicated)
 	float PlayerInputDirection;
 
 	EClimbState ClimbSate = EClimbState::ClimbLine;

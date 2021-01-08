@@ -8,14 +8,15 @@
 
 class AFPSMannequin;
 class UAnimMontage;
+class AFPSPlayerState;
 
-//UENUM()
-//enum  class EJumpState : uint8
-//{
-//	None,
-//	Jump,
-//	HangOn
-//};
+UENUM()
+enum  class EJumpState : uint8
+{
+	None,
+	HangOn,
+	ClimbOn
+};
 
 
 USTRUCT()
@@ -26,18 +27,18 @@ struct FJumpData
 public:
 
 	UPROPERTY()
-	FVector_NetQuantize TargetLocation;
+		FVector_NetQuantize TargetLocation;
 	UPROPERTY()
-	FRotator TargetRotation;
+		FRotator TargetRotation;
 };
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class FPSGAME_API UFPSPlayerJump : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UFPSPlayerJump();
 
@@ -47,8 +48,7 @@ public:
 protected:
 
 	void SetJumpMode(bool val);
-	UFUNCTION(Server, Reliable, WithValidation)
-	void SR_JumpMode(bool val);
+
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void SR_Jump();
@@ -61,19 +61,20 @@ protected:
 
 
 	void HangOnLedge();
+	UFUNCTION()
+	void HangFinished();
 	void ClimbOnLedge();
 	void ClimbFinished();
+	
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MC_HangOnLedge();
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void SR_ClimbOnLedge();
 	UFUNCTION(NetMulticast, Reliable)
 	void MC_ClimbOnLedge();
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void SR_CalculateJumpState();
+	void SR_ChackLedgeHeight();
 
 
 
@@ -81,27 +82,21 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 private:
 
 
-
-	UFUNCTION()
-	void MoveToTargetFinished();
-
-	//EJumpState CalculateJumpState();
-
-	bool ForwardTracer();
+	void ForwardTracer();
 
 	int32 GetNextUUID() { return NextUUID++; }
 
 	FVector CalculateHangOnLocation();
 	FRotator CalculateHangOnRotation();
 
-	void CalculateJumpData();
-
+	bool IsPlayerChangePosition();
+	void setJumpData(EJumpState jumpstate);
 
 private:
 
@@ -119,11 +114,12 @@ private:
 	bool DrawDebugJumpLine;
 
 
-	
+
 
 	float MaxJumpLength = 200.f;
 	float InnerTraceDeep = 50;
-
+	
+	
 	UPROPERTY(Replicated)
 	bool IsHeigthLedge = false;
 	UPROPERTY(Replicated)
@@ -135,25 +131,20 @@ private:
 
 
 
-
-	//UPROPERTY(Replicated)
-	bool SuccessLineTrace;
-	//UPROPERTY(Replicated)
 	float LedgeLength;
 	UPROPERTY(Replicated)
 	FVector WallLocation;
 	UPROPERTY(Replicated)
 	FVector WallNormal;
-	
-	
 
 
-	FName Socket = FName("PelvisSokect");
+
+
+	FName Socket = FName("PelvisSocket");
 
 	int32 NextUUID = 0;
 
 	FTimerDelegate TimerDel;
 	FTimerHandle TimerHandle_Climb;
 
-	
 };

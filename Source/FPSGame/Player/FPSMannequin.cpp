@@ -514,6 +514,26 @@ bool AFPSMannequin::SR_UpdateAiming_Validate(bool val)
 
 
 
+void AFPSMannequin::SR_SetInRight_Implementation(float val)
+{
+	InRight = val;
+}
+
+bool AFPSMannequin::SR_SetInRight_Validate(float val)
+{
+	return val >= -1 && val <= 1 ? true : false;
+}
+
+void AFPSMannequin::SR_SetInForward_Implementation(float val)
+{
+	InForward = val;
+}
+
+bool AFPSMannequin::SR_SetInForward_Validate(float val)
+{
+	return val >= -1 && val <= 1 ? true : false;
+}
+
 void AFPSMannequin::Fire()
 {
 	if (Role == ROLE_Authority)
@@ -549,6 +569,27 @@ void AFPSMannequin::JumpEvent()
 }
 
 
+
+float AFPSMannequin::GetPlayerHeight()
+{
+	/// TODO better name Selection || GetName from PlayerState Class
+	if(GetName()[3] == 'A')
+		return GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + HeadCollision->GetScaledCapsuleHalfHeight();
+	if(GetName()[3] == 'K')
+		return GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + HeadCollision->GetScaledCapsuleHalfHeight() / 2;
+
+	return 0.f;
+}
+
+float AFPSMannequin::GetDistanceToLedge()
+{
+	if (GetName()[3] == 'A')
+		return 35.f;
+	if (GetName()[3] == 'K')
+		return 30.f;
+
+	return 0.f;
+}
 
 AFPSPlayerController* AFPSMannequin::GetSelfController()
 {
