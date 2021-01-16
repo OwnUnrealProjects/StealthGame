@@ -76,7 +76,7 @@ void AFPSStone::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimiti
 	}
 
 
-	if (OtherActor->Tags.Num() != 0)
+	if (OtherActor && OtherActor->Tags.Num() != 0)
 	{
 		FName TM_Key = OtherActor->Tags[0];
 		bool IsEmitter = TM_ImpactParicles.Contains(TM_Key);
