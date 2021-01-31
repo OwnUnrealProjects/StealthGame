@@ -6,6 +6,19 @@
 #include "GameFramework/PlayerController.h"
 #include "FPSPlayerController.generated.h"
 
+class AFPSMannequin;
+
+USTRUCT()
+struct FAIData
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+
+	AActor* DetectActor;
+	float Distance;
+};
+
 /**
  * 
  */
@@ -38,15 +51,21 @@ public:
 
 	FString RoleString();
 	
-	UFUNCTION(BlueprintCallable, Category = "Player Name")
+	UFUNCTION(BlueprintCallable, Category = "Player")
 	void SetCharacterName(FString N) { CharacterName = N; }
 
-	UFUNCTION(BlueprintPure, Category = "Player Name")
+	UFUNCTION(BlueprintPure, Category = "Player")
 	FString GetPlayerName() { return CharacterName; }
 
 	float GetMaxAimPrecision() { return MaxAimPrecision; }
 	float GetMaxLoud() { return MaxLoud; }
 	float GetMaxStrenght() { return MaxStrenght; }
+
+	UFUNCTION(BlueprintPure, Category = "Player")
+	AFPSMannequin* GetOwnCharacter() { return OwnCharacter; }
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void GetTargetAIDistance(float distance);
 
 protected:
 
@@ -55,8 +74,19 @@ protected:
 	UFUNCTION()
 	void OnRep_Possess();
 
+	UFUNCTION()
+	void AIDetect(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+
+	UFUNCTION()
+	void AILoss(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+
+protected:
 	UPROPERTY(Replicated)
 	FString CharacterName;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+	float AIDetectRadius;
 
 private:
 
@@ -69,4 +99,14 @@ private:
 	float MaxLoud;
 	UPROPERTY()
 	float MaxStrenght;
+
+	AFPSMannequin* OwnCharacter;
+
+	TArray<AActor*> AIActorList;
+
+	AActor* TargetAI;
+	float TargetAIDistance;
+
+	bool bAIDetect;
+
 };

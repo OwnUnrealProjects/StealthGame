@@ -11,9 +11,11 @@
 #include "../Projectile/FPSStone.h"
 #include "../FPSGame.h"
 #include "../Library/FPSMath.h"
+#include "../Public/FPSObjectiveActor.h"
 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SceneComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -90,6 +92,11 @@ AFPSMannequin::AFPSMannequin(const FObjectInitializer& ObjectInitializer) : Supe
 	HeadCollision->SetCapsuleRadius(27.f);
 	HeadCollision->SetCollisionProfileName(TEXT("CharacterHead"));
 	//HeadCollision->OnComponentHit.AddDynamic(this, &AFPSMannequin::HeadShoot);
+
+	AIDetectComponent = CreateDefaultSubobject<USphereComponent>(TEXT("AIDetect"));
+	AIDetectComponent->SetupAttachment(RootComponent);
+	AIDetectComponent->SetSphereRadius(1000.f);
+	AIDetectComponent->SetCollisionProfileName(TEXT("AIDetector"));
 
 	TM_ShotDirection.Add(0, "Forward");
 	//TM_ShotDirection.Add(90, "Left");
@@ -183,9 +190,10 @@ void AFPSMannequin::HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherAc
 		return;
 	FName* StoneTag = OtherActor->Tags.GetData();
 	FString ST = StoneTag->GetPlainNameString();
+	LOG_S(FString("HeadShootEvent"));
 	if (ST == "Projectile")
 	{
-		float HitDegree = FPSMath::GetHitPointDirectionYaxis(Hit.ImpactPoint, HeadCollision->GetComponentLocation(), this);
+		float HitDegree = FPSMath::GetHitPointDirectionFromForwardVector(Hit.ImpactPoint, HeadCollision->GetComponentLocation(), this);
 		LOG_S(FString::Printf(TEXT("Head Hit Stone HitDegree = %f"), HitDegree));
 		HeadShotDirection = HitDegree;
 		bIsShot = true;
@@ -311,6 +319,24 @@ void AFPSMannequin::UnPossessed()
 
 	Destroy(true, true);
 	UE_LOG(LogTemp, Warning, TEXT("UNPOSSESSED function"));
+
+	if (bReturnObjective)
+	{
+		//Set Spawn Collision Handling Override
+		FActorSpawnParameters ActorSpawnParams;
+		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		ActorSpawnParams.Instigator = this;
+
+		auto Objective = GetWorld()->SpawnActor<AFPSObjectiveActor>(BPObjective, GetActorLocation(), FRotator::ZeroRotator, ActorSpawnParams);
+		if (Objective)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SCharacter --- Objective Name = %s"), *Objective->GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SCharacter ---  Objective is NULL"));
+		}
+	}
 }
 
 void AFPSMannequin::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -333,7 +359,10 @@ void AFPSMannequin::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AFPSMannequin, InRight);
 	DOREPLIFETIME(AFPSMannequin, IsExitLedge);
 	DOREPLIFETIME_CONDITION(AFPSMannequin, IsLanded, COND_OwnerOnly);
-	DOREPLIFETIME(AFPSMannequin, bJump)
+	DOREPLIFETIME(AFPSMannequin, bJump);
+	DOREPLIFETIME_CONDITION(AFPSMannequin, bIsCarryingObjective, COND_OwnerOnly);
+	DOREPLIFETIME(AFPSMannequin, bReturnObjective);
+	DOREPLIFETIME(AFPSMannequin, bGuardSeen);
 
 }
 

@@ -58,8 +58,8 @@ bool UHostMenu::ReadyToHost()
 {
 	if (!ensure(ServerName != nullptr)) return false;
 	if (ServerName->GetText().ToString().IsEmpty()) return false;
-	if (!ensure(PlayerName != nullptr)) return false;
-	if (PlayerName->GetText().ToString().IsEmpty()) return false;
+	/*if (!ensure(PlayerName != nullptr)) return false;
+	if (PlayerName->GetText().ToString().IsEmpty()) return false;*/
 
 	return true;
 }

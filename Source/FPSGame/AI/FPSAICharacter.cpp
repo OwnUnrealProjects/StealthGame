@@ -3,12 +3,16 @@
 #include "FPSAICharacter.h"
 
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Perception/PawnSensingComponent.h"
+#include "Net/UnrealNetwork.h"
 
 #include "../Player/FPSMannequin.h"
 #include "../DebugTool/DebugLog.h"
 #include "../Public/FPSGameMode.h"
+#include "../Library/FPSMath.h"
 
 // Sets default values
 AFPSAICharacter::AFPSAICharacter()
@@ -16,17 +20,34 @@ AFPSAICharacter::AFPSAICharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("AIBody"));
+
 	CatchPlayerCollision = CreateDefaultSubobject<UBoxComponent>("CatchPlayerCollision");
-	CatchPlayerCollision->SetupAttachment(GetMesh(), TEXT("SocketCollision"));
+	CatchPlayerCollision->SetupAttachment(GetMesh(), TEXT("SocketPlayerCatchCollision"));
 	CatchPlayerCollision->SetBoxExtent(FVector(20.f, 32.f, 50.f));
 	CatchPlayerCollision->SetCollisionProfileName(TEXT("AICatchPlayer"));
 	CatchPlayerCollision->bGenerateOverlapEvents = true;
 	//CatchPlayerCollision->OnComponentBeginOverlap.AddDynamic(this, &AFPSAICharacter::HandlePlayer);
 
 
+	HeadCollision = CreateDefaultSubobject<USphereComponent>(TEXT("HeadCollision"));
+	HeadCollision->SetupAttachment(GetMesh());
+
 	PawnSensingComp = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComponent"));
 	PawnSensingComp->OnHearNoise.AddDynamic(this, &AFPSAICharacter::OnPawnHearing);
 
+	Tags.Add(FName("AI"));
+
+}
+
+void AFPSAICharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AFPSAICharacter, ShootState);
+	DOREPLIFETIME(AFPSAICharacter, bHit);
+	DOREPLIFETIME(AFPSAICharacter, HitDirection);
+	DOREPLIFETIME(AFPSAICharacter, StoneHitDirection);
 }
 
 void AFPSAICharacter::OnPawnHearing(APawn* NInstigator, const FVector & Location, float Volume)
@@ -46,6 +67,49 @@ void AFPSAICharacter::TurnHearingPoint(FVector Point)
 	SetActorRotation(NewLookAt);
 
 	LOG_S(FString("Turn on Boss"));
+}
+
+void AFPSAICharacter::HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (!OtherActor)
+		return;
+
+	FName* StoneTag = OtherActor->Tags.GetData();
+	FString ST = StoneTag->GetPlainNameString();
+	if (ST == "Projectile")
+	{
+		bHit = true;
+		ShootState = EShootState::HeadShoot;
+
+		StoneHitDirection = FPSMath::GetHitPointDirectionFromRightVector(Hit.ImpactPoint, HeadCollision->GetComponentLocation(), this);
+		LOG_F(StoneHitDirection);
+
+
+	}
+	
+}
+
+void AFPSAICharacter::BodyShoot(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (!OtherActor)
+		return;
+
+	FName* StoneTag = OtherActor->Tags.GetData();
+	FString ST = StoneTag->GetPlainNameString();
+	if (ST == "Projectile")
+	{
+		LOG_S(FString("BodyHit"));
+
+		bHit = true;
+		ShootState = EShootState::BodyShoot;
+
+		bool randomDirection = FMath::RandBool();
+		if (randomDirection)
+			StoneHitDirection = 180;
+		if (!randomDirection)
+			StoneHitDirection = 0;
+
+	}
 }
 
 void AFPSAICharacter::HandlePlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -76,6 +140,8 @@ void AFPSAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	CatchPlayerCollision->OnComponentBeginOverlap.AddDynamic(this, &AFPSAICharacter::HandlePlayer);
+	HeadCollision->OnComponentHit.AddDynamic(this, &AFPSAICharacter::HeadShoot);
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AFPSAICharacter::BodyShoot);
 }
 
 

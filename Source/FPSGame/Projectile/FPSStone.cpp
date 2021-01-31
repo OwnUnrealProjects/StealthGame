@@ -70,7 +70,7 @@ void AFPSStone::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimiti
 
 	if (Role == ROLE_Authority)
 	{
-		MakeNoise(1.f, Instigator); // Instigator set Fire() function
+		MakeNoise(1.f, Instigator, this->GetActorLocation(), 100.f); // Instigator set Fire() function
 		LOG_S(FString::Printf(TEXT("Sense Stone Hit Location = %s"), *GetActorLocation().ToString()));
 		Destroy();
 	}

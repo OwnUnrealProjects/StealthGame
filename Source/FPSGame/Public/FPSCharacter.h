@@ -71,7 +71,7 @@ public:
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "GamePlay")
 	bool bIsCarryingObjective;
 
-	/* Close the gate to call "Game Over" Witget in Multiple times */
+	/* Close the gate to call "Game Over" Widget in Multiple times */
 	UPROPERTY(Replicated)
 	bool bGuardSeen = true;
 

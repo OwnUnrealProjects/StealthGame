@@ -22,11 +22,13 @@ class UFPSPlayerFireComponent;
 class UFPSPlayerJump;
 class UFPSPlayerClimb;
 class UTexture2D;
-enum  class EFightState : uint8;
+class USphereComponent;
 
+enum  class EFightState : uint8;
 class UAnimMontage;
 class AFPSStone;
 class UArrowComponent;
+class AFPSObjectiveActor;
 
 
 UENUM()
@@ -109,7 +111,12 @@ protected:
 		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Collision")
 		UCapsuleComponent* HeadCollision;
 
+public:
 
+		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Collision")
+		USphereComponent* AIDetectComponent;
+
+protected:
 	/// Pawn Ability Components
 		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 		UPawnNoiseEmitterComponent* MannequinNoiseEmitterComponent;
@@ -200,6 +207,24 @@ public:
 		void SR_SetInRight(float val);
 		UFUNCTION(Server, Reliable, WithValidation)
 		void SR_SetInForward(float val);
+
+	/// Winner Attributes
+		/* Winner Flag */
+		UPROPERTY(Replicated, BlueprintReadOnly, Category = "GamePlay")
+		bool bIsCarryingObjective;
+
+		/* Check if Player must be return winner Flag */
+		UPROPERTY(Replicated)
+		bool bReturnObjective = false;
+
+		UPROPERTY(EditDefaultsOnly, Category = "Spectating")
+		TSubclassOf<AFPSObjectiveActor> BPObjective;
+
+	/// AI Seen
+		/* Close the gate to call "Game Over" Widget in Multiple times */
+		UPROPERTY(Replicated)
+		bool bGuardSeen = true;
+
 
 public:
 	

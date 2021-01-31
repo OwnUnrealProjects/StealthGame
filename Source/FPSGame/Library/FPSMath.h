@@ -9,6 +9,8 @@ namespace FPSMath {
 
 	static float GetHitPointDirection(FVector HitPoint, FVector CenterPoint, AActor* Actor);
 
-	static float GetHitPointDirectionYaxis(FVector HitPoint, FVector CenterPoint, AActor* Actor);
+	static float GetHitPointDirectionFromForwardVector(FVector HitPoint, FVector CenterPoint, AActor* Actor);
+
+	static float GetHitPointDirectionFromRightVector(FVector HitPoint, FVector CenterPoint, AActor* Actor);
 };
 

@@ -8,6 +8,15 @@
 
 class UBoxComponent;
 class UPawnSensingComponent;
+class USphereComponent;
+
+UENUM(BlueprintType)
+enum class EShootState : uint8
+{
+	None,
+	HeadShoot,
+	BodyShoot
+};
 
 UCLASS()
 class FPSGAME_API AFPSAICharacter : public ACharacter
@@ -18,13 +27,36 @@ public:
 	// Sets default values for this character's properties
 	AFPSAICharacter();
 
+	UFUNCTION(BlueprintPure, Category = "Projectile")
+	bool GetHit() { return bHit; }
+	UFUNCTION(BlueprintCallable, Category = "Projectile")
+	void SetHit(bool hit) { bHit = hit; }
+
+	UFUNCTION(BlueprintPure, Category = "Projectile")
+	EShootState GetShootState() { return ShootState; }
+	UFUNCTION(BlueprintCallable, Category = "Projectile")
+	void SetShootState(EShootState state) { ShootState = state; }
+
+	UFUNCTION(BlueprintPure, Category = "Projectile")
+	float GetHitDirection() { return StoneHitDirection; }
+
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Collision")
 	UBoxComponent* CatchPlayerCollision;
 
+	UPROPERTY(VisibleAnywhere, Category = "Collision")
+	USphereComponent* HeadCollision;
+
 	UPROPERTY(VisibleAnywhere, Category = "Component")
 	UPawnSensingComponent* PawnSensingComp;
+
+	UPROPERTY(Replicated, BlueprintReadWrite, Category = "Projectile")
+	bool bHit = false;
+
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Projectile")
+	FVector HitDirection;
 
 protected:
 
@@ -37,6 +69,12 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Perception")
 	void TurnHearingPoint(FVector Point);
 
+	UFUNCTION()
+	void HeadShoot(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UFUNCTION()
+	void BodyShoot(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -47,7 +85,11 @@ public:
 
 	// Called to bind functionality to input
 	//virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+private:
 
-	
+	UPROPERTY(Replicated)
+	EShootState ShootState = EShootState::None;
+	UPROPERTY(Replicated)
+	float StoneHitDirection;
 	
 };

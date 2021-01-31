@@ -42,8 +42,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Spectating")
 	TSubclassOf<AActor> BPTarget;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Spectating")
-	TSubclassOf<AActor> BPObjective;
+	/*UPROPERTY(EditDefaultsOnly, Category = "Spectating")
+	TSubclassOf<AActor> BPObjective;*/
 
 	/*UPROPERTY(EditDefaultsOnly, Category = "Spectator")
 	TSubclassOf<ATargetPoint> Location;*/

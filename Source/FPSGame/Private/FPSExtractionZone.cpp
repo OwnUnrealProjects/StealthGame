@@ -10,6 +10,7 @@
 #include "FPSPlayerController.h"
 //#include "../Game/FPSInGameMode.h"
 #include "../Public/FPSGameMode.h"
+#include "../DebugTool/DebugLog.h"
 
 
 // Sets default values
@@ -58,7 +59,8 @@ FString GetEnumText(ENetRole Role)
 void AFPSExtractionZone::HandleOverlap(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor,
 	UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	AFPSCharacter* PlayerPawn = Cast<AFPSCharacter>(OtherActor);
+	//AFPSCharacter* PlayerPawn = Cast<AFPSCharacter>(OtherActor);
+	AFPSMannequin* PlayerPawn = Cast<AFPSMannequin>(OtherActor);
 	if (!PlayerPawn)
 		return;
 	
@@ -73,25 +75,10 @@ void AFPSExtractionZone::HandleOverlap(UPrimitiveComponent * OverlappedComponent
 		AFPSGameMode* GM = Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode());
 		if (GM)
 		{
-			
+			//here is coming only Server because GameMode is Exist only on Server
 			GM->CompleteMission(); // true
 		}
-
-		/*int32 index = 0;
-		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; It++)
-		{
-			++index;
-			AFPSPlayerController* PC = Cast<AFPSPlayerController>(It->Get());
-			if (PC && PC->IsLocalController())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Idex = %i"), index);
-				UE_LOG(LogTemp, Warning, TEXT("Extraction CarryingObjective Area Zone Player name = %s,  CarryingObjective = %i"), *PlayerPawn->GetName(), PlayerPawn->bIsCarryingObjective)
-				PC->OnMissionCompleted(PlayerPawn, PlayerPawn->bIsCarryingObjective);
-				PC->GetPawn()->DisableInput(PC);
-			}
-		}*/
 		
-		UE_LOG(LogTemp, Warning, TEXT("ExtractionZone After CompletMission"));
 		
 	}
 	else

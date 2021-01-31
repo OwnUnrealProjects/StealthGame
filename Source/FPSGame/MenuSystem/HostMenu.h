@@ -27,8 +27,8 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UEditableTextBox* ServerName;
 	
-	UPROPERTY(meta = (BindWidget))
-	class UEditableTextBox* PlayerName;
+	/*UPROPERTY(meta = (BindWidget))
+	class UEditableTextBox* PlayerName;*/
 
 
 protected:

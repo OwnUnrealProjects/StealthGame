@@ -7,6 +7,7 @@
 #include "../DebugTool/DebugLog.h"
 #include "../Game/FPSGameObject.h"
 #include "../Game/FPSInGameInstance.h"
+#include "../Player/FPSMannequin.h"
 #include "FPSGameMode.h"
 #include "../Game/FPSSaveGame.h"
 
@@ -57,7 +58,7 @@ void AFPSGameState::MultiCastOnMissionComplite_Implementation(AActor *CameraNewT
 		AFPSPlayerController* PC = Cast<AFPSPlayerController>(It->Get());
 		if (PC && PC->IsLocalController() && PC->GetPawn())
 		{
-			auto Player = Cast<AFPSCharacter>(PC->GetPawn());
+			auto Player = Cast<AFPSMannequin>(PC->GetPawn());
 			UE_LOG(LogTemp, Warning, TEXT("GameState Player name = %s,  CarryingObjective = %i"), *Player->GetName(), Player->bIsCarryingObjective);
 			PC->SetViewTargetWithBlend(CameraNewTarget, 1.5f, EViewTargetBlendFunction::VTBlend_Cubic);
 			PC->OnMissionCompleted(Player->bIsCarryingObjective);

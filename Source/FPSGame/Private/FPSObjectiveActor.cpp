@@ -5,7 +5,8 @@
 
 #include "Kismet/GameplayStatics.h"
 
-#include "FPSCharacter.h"
+//#include "FPSCharacter.h"
+#include "../Player/FPSMannequin.h"
 
 // Sets default values
 AFPSObjectiveActor::AFPSObjectiveActor()
@@ -53,24 +54,31 @@ void AFPSObjectiveActor::NotifyActorBeginOverlap(AActor * OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
-	PlayEffects();
+	//PlayEffects();
 
-	AFPSCharacter * MyCharacter = Cast<AFPSCharacter>(OtherActor);
-	if (Role == ROLE_Authority) //(Role == ROLE_Authority)
+	//AFPSCharacter * MyCharacter = Cast<AFPSCharacter>(OtherActor);
+	AFPSMannequin* MyCharacter = Cast<AFPSMannequin>(OtherActor);
+
+	if (MyCharacter)
 	{
-
 		PlayEffects();
 
-		//AFPSCharacter * MyCharacter = Cast<AFPSCharacter>(OtherActor);
-		if (MyCharacter)
+		if (Role == ROLE_Authority)
 		{
-			MyCharacter->bIsCarryingObjective = true;
 
+			PlayEffects();
+
+			//AFPSCharacter * MyCharacter = Cast<AFPSCharacter>(OtherActor);
+			if (MyCharacter)
+			{
+				MyCharacter->bIsCarryingObjective = true;
+
+			}
+
+			if (HasAuthority())
+				Destroy();
 		}
 	}
-
-	if(HasAuthority())
-		Destroy();
 
 	
 }

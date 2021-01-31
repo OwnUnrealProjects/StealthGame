@@ -101,28 +101,7 @@ void AFPSGameMode::MissionFaild(APawn * SeenPawn)
 
 	}
 
-	//auto SeenPlayer = Cast<AFPSCharacter>(SeenPawn);
-	//if (SeenPlayer->bIsCarryingObjective)
-	//{
-	//	//Set Spawn Collision Handling Override
-	//	FActorSpawnParameters ActorSpawnParams;
-	//	ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	//	//ActorSpawnParams.Instigator = this;
 
-	//	FVector location = SeenPawn->GetActorLocation();
-
-	//	auto Objective = GetWorld()->SpawnActor<AFPSObjectiveActor>(BPObjective, location, FRotator::ZeroRotator, ActorSpawnParams);
-	//	if (Objective)
-	//	{
-	//		UE_LOG(LogTemp, Warning, TEXT("Objective Name = %s"), *Objective->GetName());
-	//	}
-	//	else
-	//	{
-	//		UE_LOG(LogTemp, Warning, TEXT("Objective is NULL"));
-	//	}
-	//}
-
-	//GS = GetGameState<AFPSGameState>();
 	if (GS)
 	{
 		GS->MissionFailed(NewViewTarget, SeenPawn, false);
