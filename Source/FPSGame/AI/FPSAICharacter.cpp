@@ -119,7 +119,7 @@ void AFPSAICharacter::HandleAlarmEvent(bool Alarm, AActor* AlarmActor)
 	//LOG_S(FString("Boss Alarm"));
 	if (bFirstAlarm)
 	{
-		this->bAlarm = bAlarm;
+		this->bAlarm = Alarm;
 		AlarmInstigator = AlarmActor;
 		bFirstAlarm = false;
 		LOG_S(FString::Printf(TEXT("AlarmActor location = %s"), *AlarmInstigator->GetActorLocation().ToString()));
@@ -135,7 +135,7 @@ void AFPSAICharacter::HandleAlarmEvent(bool Alarm, AActor* AlarmActor)
 		LOG_I(bAlarm);
 	}
 
-
+	LOG_S(FString("test"));
 }
 
 void AFPSAICharacter::HandlePlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
