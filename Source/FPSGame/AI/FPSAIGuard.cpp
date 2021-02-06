@@ -119,14 +119,23 @@ FString AFPSAIGuard::GetStateText(EAIState state)
 
 void AFPSAIGuard::OnPawnSeen(APawn * SeenPawn)
 {
-	auto Gualty = Cast<AFPSCharacter>(SeenPawn);
+	/*auto Gualty = Cast<AFPSCharacter>(SeenPawn);
 	if (!Gualty)
+		return;*/
+
+	if (!SeenPawn)
 		return;
-	UE_LOG(LogTemp, Warning, TEXT("SeenPawn"));
+
+	FName* SeenPawnTag = SeenPawn->Tags.GetData();
+	FString ST = SeenPawnTag->GetPlainNameString();
+	if (ST != "Player")
+		return;
+	
+	LOG_S(FString("SeenPawn"));
 	
 	DrawDebugSphere(GetWorld(), SeenPawn->GetActorLocation(), 40.f, 10.f, FColor::Yellow, false, 10.f);
 
-	AFPSGameMode* GM = Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode());
+	/*AFPSGameMode* GM = Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode());
 	if (GM && Gualty->bGuardSeen)
 	{
 
@@ -135,8 +144,10 @@ void AFPSAIGuard::OnPawnSeen(APawn * SeenPawn)
 			Gualty->bReturnObjective = true;
 		GM->MissionFaild(SeenPawn);
 		UE_LOG(LogTemp, Warning, TEXT("SeenPawn GM"));
-	}
+	}*/
 
+	
+	AlarmEvent.Broadcast(true, this);
 	
 	FVector Direction = SeenPawn->GetActorLocation() - GetActorLocation();
 	Direction.Normalize();
@@ -193,12 +204,14 @@ void AFPSAIGuard::OnPawnHearing(APawn* NoiseInstigator, const FVector & Location
 
 void AFPSAIGuard::ResetOrientation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("ResetOrinetaion"));
+	LOG_S(FString("ResetOrientation"));
 	/*if (GuardState == EAIState::Alert)
 		return;*/
 
 	SetActorRotation(OriginalRotation);
 	SetAIState(EAIState::Idle);
+
+	AlarmEvent.Broadcast(false, this);
 
 	// Stopped Investigating if we are a patrolling pawn, pick a new patrol point to move to
 	if (bPatrol)

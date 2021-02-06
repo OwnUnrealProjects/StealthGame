@@ -13,6 +13,7 @@
 #include "../DebugTool/DebugLog.h"
 #include "../Public/FPSGameMode.h"
 #include "../Library/FPSMath.h"
+#include "FPSAIGuard.h"
 
 // Sets default values
 AFPSAICharacter::AFPSAICharacter()
@@ -32,6 +33,7 @@ AFPSAICharacter::AFPSAICharacter()
 
 	HeadCollision = CreateDefaultSubobject<USphereComponent>(TEXT("HeadCollision"));
 	HeadCollision->SetupAttachment(GetMesh());
+	HeadCollision->SetCollisionProfileName(TEXT("AIHead"));
 
 	PawnSensingComp = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComponent"));
 	PawnSensingComp->OnHearNoise.AddDynamic(this, &AFPSAICharacter::OnPawnHearing);
@@ -95,8 +97,8 @@ void AFPSAICharacter::BodyShoot(UPrimitiveComponent* HitComponent, AActor* Other
 		return;
 
 	FName* StoneTag = OtherActor->Tags.GetData();
-	FString ST = StoneTag->GetPlainNameString();
-	if (ST == "Projectile")
+	//FString ST = StoneTag->GetPlainNameString();
+	if (StoneTag && StoneTag->ToString() == "Projectile")
 	{
 		LOG_S(FString("BodyHit"));
 
@@ -110,6 +112,30 @@ void AFPSAICharacter::BodyShoot(UPrimitiveComponent* HitComponent, AActor* Other
 			StoneHitDirection = 0;
 
 	}
+}
+
+void AFPSAICharacter::HandleAlarmEvent(bool Alarm, AActor* AlarmActor)
+{
+	//LOG_S(FString("Boss Alarm"));
+	if (bFirstAlarm)
+	{
+		this->bAlarm = bAlarm;
+		AlarmInstigator = AlarmActor;
+		bFirstAlarm = false;
+		LOG_S(FString::Printf(TEXT("AlarmActor location = %s"), *AlarmInstigator->GetActorLocation().ToString()));
+	}
+
+
+	if (!bAlarm && AlarmInstigator == AlarmActor)
+	{
+		this->bAlarm = bAlarm;
+		AlarmInstigator = nullptr;
+		bFirstAlarm = true;
+		LOG_S(FString("AlarmInstigator is NULL"));
+		LOG_I(bAlarm);
+	}
+
+
 }
 
 void AFPSAICharacter::HandlePlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -142,6 +168,12 @@ void AFPSAICharacter::BeginPlay()
 	CatchPlayerCollision->OnComponentBeginOverlap.AddDynamic(this, &AFPSAICharacter::HandlePlayer);
 	HeadCollision->OnComponentHit.AddDynamic(this, &AFPSAICharacter::HeadShoot);
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AFPSAICharacter::BodyShoot);
+
+	for (auto AIFreind : FreindList)
+	{
+		if (AIFreind)
+			AIFreind->AlarmEvent.AddDynamic(this, &AFPSAICharacter::HandleAlarmEvent);
+	}
 }
 
 

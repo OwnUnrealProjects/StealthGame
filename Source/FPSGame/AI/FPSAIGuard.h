@@ -8,6 +8,8 @@
 
 class UPawnSensingComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAlarmEvent, bool, bAlarm, AActor*, LocationAlarm);
+
 UENUM(BlueprintType)
 enum class EAIState : uint8
 {
@@ -39,6 +41,10 @@ protected:
 	UFUNCTION()
 	void OnRep_GuardState();
 
+public:
+
+	UPROPERTY()
+	FAlarmEvent AlarmEvent;
 
 protected:
 	// Called when the game starts or when spawned
@@ -61,6 +67,8 @@ protected:
 	void MoveNextPatrolPoint();
 
 	EAIState GetGuardState() { return GuardState; }
+
+
 
 protected:
 

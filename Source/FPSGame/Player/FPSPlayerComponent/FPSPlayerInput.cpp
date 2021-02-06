@@ -118,8 +118,8 @@ void UFPSPlayerInput::Azimuth(float Val)
 	//Player->GetCameraSeatComponent()->SetRelativeRotation(FRotator(Player->GetCameraSeatComponent()->RelativeRotation.Pitch,NewRotation,0));
 	//LOG_S(FString("Mousex"));
 
-
-	Player->AddControllerYawInput(Val * 50 * GetWorld()->GetDeltaSeconds());
+	if(Val != 0)
+		Player->AddControllerYawInput(Val * 50 * GetWorld()->GetDeltaSeconds());
 
 }
 
@@ -179,9 +179,12 @@ void UFPSPlayerInput::MoveForward(float Val)
 		//LOG_S(FString("Move ..."));
 	}
 	
-	Player->InForward = Val;
-	Player->SR_SetInForward(Val);
-	LOG_S(FString("ClimbComponent InputForward"));
+	if (Player)
+	{
+		Player->InForward = Val;
+		Player->SR_SetInForward(Val);
+		LOG_S(FString("ClimbComponent InputForward"));
+	}
 }
 
 void UFPSPlayerInput::MoveRight(float Val)
@@ -208,8 +211,12 @@ void UFPSPlayerInput::MoveRight(float Val)
 		}
 	}
 
-	Player->InRight = Val;
-	Player->SR_SetInRight(Val);
+	if (Player)
+	{
+		Player->InRight = Val;
+		Player->SR_SetInRight(Val);
+	}
+	
 	
 }
 

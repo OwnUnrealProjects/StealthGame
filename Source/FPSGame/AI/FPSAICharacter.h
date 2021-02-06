@@ -9,6 +9,7 @@
 class UBoxComponent;
 class UPawnSensingComponent;
 class USphereComponent;
+class AFPSAIGuard;
 
 UENUM(BlueprintType)
 enum class EShootState : uint8
@@ -27,10 +28,17 @@ public:
 	// Sets default values for this character's properties
 	AFPSAICharacter();
 
+	/* I don't use this functions */
 	UFUNCTION(BlueprintPure, Category = "Projectile")
 	bool GetHit() { return bHit; }
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
 	void SetHit(bool hit) { bHit = hit; }
+	/* ================================ */
+
+	UFUNCTION(BlueprintPure, Category = "Alarm")
+	inline bool GetAlarm() { return bAlarm; }
+	UFUNCTION(BlueprintPure, Category = "Alarm")
+	inline AActor* GetAlarmInstigator() { return AlarmInstigator; }
 
 	UFUNCTION(BlueprintPure, Category = "Projectile")
 	EShootState GetShootState() { return ShootState; }
@@ -58,6 +66,10 @@ protected:
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Projectile")
 	FVector HitDirection;
 
+	/* Alarm Instigators */
+	UPROPERTY(EditInstanceOnly, Category = "Friends")
+	TArray<AFPSAIGuard*> FreindList;
+
 protected:
 
 	UFUNCTION()
@@ -75,6 +87,9 @@ protected:
 	UFUNCTION()
 	void BodyShoot(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UFUNCTION()
+	void HandleAlarmEvent(bool Alarm, AActor* AlarmActor);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -91,5 +106,9 @@ private:
 	EShootState ShootState = EShootState::None;
 	UPROPERTY(Replicated)
 	float StoneHitDirection;
+
+	bool bFirstAlarm = true;
+	bool bAlarm;
+	AActor* AlarmInstigator;
 	
 };
