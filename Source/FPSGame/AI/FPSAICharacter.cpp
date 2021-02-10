@@ -114,28 +114,27 @@ void AFPSAICharacter::BodyShoot(UPrimitiveComponent* HitComponent, AActor* Other
 	}
 }
 
-void AFPSAICharacter::HandleAlarmEvent(bool Alarm, AActor* AlarmActor)
+void AFPSAICharacter::HandleAlarmEvent(bool alarm, AActor* AlarmActor)
 {
 	//LOG_S(FString("Boss Alarm"));
 	if (bFirstAlarm)
 	{
-		this->bAlarm = Alarm;
+		this->bAlarm = alarm;
 		AlarmInstigator = AlarmActor;
 		bFirstAlarm = false;
 		LOG_S(FString::Printf(TEXT("AlarmActor location = %s"), *AlarmInstigator->GetActorLocation().ToString()));
 	}
 
 
-	if (!bAlarm && AlarmInstigator == AlarmActor)
+	if (!alarm && AlarmInstigator == AlarmActor)
 	{
-		this->bAlarm = bAlarm;
+		this->bAlarm = alarm;
 		AlarmInstigator = nullptr;
 		bFirstAlarm = true;
 		LOG_S(FString("AlarmInstigator is NULL"));
 		LOG_I(bAlarm);
 	}
 
-	LOG_S(FString("test"));
 }
 
 void AFPSAICharacter::HandlePlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

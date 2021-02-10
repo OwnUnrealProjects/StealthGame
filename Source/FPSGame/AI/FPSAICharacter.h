@@ -88,7 +88,7 @@ protected:
 	void BodyShoot(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	UFUNCTION()
-	void HandleAlarmEvent(bool Alarm, AActor* AlarmActor);
+	void HandleAlarmEvent(bool alarm, AActor* AlarmActor);
 
 protected:
 	// Called when the game starts or when spawned
