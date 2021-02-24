@@ -6,8 +6,12 @@
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Containers/Map.h"
+//#include "Net/UnrealNetwork.h"
+#include "Sound/SoundCue.h"
 
 #include "../DebugTool/DebugLog.h"
+
+
 
 
 // Sets default values
@@ -53,7 +57,12 @@ AFPSStone::AFPSStone()
 	SetReplicates(true);
 	SetReplicateMovement(true);
 
+	bNetLoadOnClient = true;
+
+
 }
+
+
 
 void AFPSStone::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
@@ -64,25 +73,74 @@ void AFPSStone::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimiti
 
 	}
 
-	//LOG_S(FString::Printf(TEXT("SSS Hit Actor = %s"), *OtherActor->GetName()));
-	DrawDebugSphere(GetWorld(), GetActorLocation(), 25, 12, FColor::Green, false, 10.f, 0, 1.f);
-	DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 50.f), OtherComp->GetName(), nullptr, FColor::Purple, 10.f);
+	if (DrawDebugShoneHitPoint)
+	{
+		DrawDebugSphere(GetWorld(), GetActorLocation(), 25, 12, FColor::Green, false, 10.f, 0, 1.f);
+		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 0, 50.f), OtherComp->GetName(), nullptr, FColor::Purple, 10.f);
+	}
+	
+
+	/*if (Role == ROLE_Authority)
+		LOG_S(FString::Printf(TEXT("Server HitPoint = %s"), *StoneHit.ImpactPoint.ToString()));
+	if (Role == ROLE_AutonomousProxy)
+		LOG_S(FString::Printf(TEXT("Client HitPoint = %s"), *StoneHit.ImpactPoint.ToString()));
+	if (Role == ROLE_SimulatedProxy)
+		LOG_S(FString::Printf(TEXT("Simulate HitPoint = %s"), *StoneHit.ImpactPoint.ToString()));*/
+	
+	if (OtherActor && OtherActor->Tags.Num() != 0)
+	{
+		FName TM_Key = OtherActor->Tags[0];
+		bool IsEmitter = TM_ImpactParticle.Contains(TM_Key);
+		if (IsEmitter)
+			SR_StoneHitEffect(Hit, TM_Key);
+	
+	}
 
 	if (Role == ROLE_Authority)
 	{
+		
 		MakeNoise(1.f, Instigator, this->GetActorLocation(), 100.f); // Instigator set Fire() function
 		LOG_S(FString::Printf(TEXT("Sense Stone Hit Location = %s"), *GetActorLocation().ToString()));
 		Destroy();
 	}
+	
+}
 
 
-	if (OtherActor && OtherActor->Tags.Num() != 0)
-	{
-		FName TM_Key = OtherActor->Tags[0];
-		bool IsEmitter = TM_ImpactParicles.Contains(TM_Key);
-		if(IsEmitter)
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TM_ImpactParicles[TM_Key], Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
-	}
+void AFPSStone::SR_StoneHitEffect_Implementation(FHitResult HitPoint, FName EffectName)
+{
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TM_ImpactParticle[EffectName], HitPoint.ImpactPoint, HitPoint.ImpactNormal.Rotation());
+	UGameplayStatics::PlaySound2D(
+		GetWorld(),
+		TM_ImpactSound[EffectName],
+		FMath::RandRange(0.5f, 0.9f),
+		1.f,
+		FMath::RandRange(0.1f, 0.3f),
+		nullptr,
+		this
+		);
+	MC_StoneHitEfect(HitPoint, EffectName);
+}
+
+bool AFPSStone::SR_StoneHitEffect_Validate(FHitResult HitPoint, FName EffectName)
+{
+	return true;
+}
+
+void AFPSStone::MC_StoneHitEfect_Implementation(FHitResult HitPoint, FName EffectName)
+{
+	//if(Role == ROLE_SimulatedProxy)
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TM_ImpactParticle[EffectName], HitPoint.ImpactPoint, HitPoint.ImpactNormal.Rotation());
+	UGameplayStatics::PlaySound2D(
+		GetWorld(),
+		TM_ImpactSound[EffectName],
+		FMath::RandRange(0.5f, 0.9f),
+		1.f,
+		FMath::RandRange(0.1f, 0.3f),
+		nullptr,
+		this
+	);
+
 }
 
 void AFPSStone::LaunchStone(float speed)
@@ -106,12 +164,26 @@ void AFPSStone::BeginPlay()
 {
 	Super::BeginPlay();
 	//Stone->OnComponentHit.AddDynamic(this, &AFPSStone::OnHit);
+
+	/*if (Role == ROLE_Authority)
+		LOG_S(FString::Printf(TEXT("Server HitPoint = %s"), *StoneHit.ImpactPoint.ToString()));
+	if (Role == ROLE_AutonomousProxy)
+		LOG_S(FString::Printf(TEXT("Client HitPoint = %s"), *StoneHit.ImpactPoint.ToString()));
+	if (Role == ROLE_SimulatedProxy)
+		LOG_S(FString::Printf(TEXT("Simulate HitPoint = %s"), *StoneHit.ImpactPoint.ToString()));*/
 }
 
 // Called every frame
 void AFPSStone::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	/*if (Role == ROLE_Authority)
+		LOG_S(FString("Server"));
+	if (Role == ROLE_AutonomousProxy)
+		LOG_S(FString("Client"));
+	if (Role == ROLE_SimulatedProxy)
+		LOG_S(FString("Simulated"));;*/
 
 }
 

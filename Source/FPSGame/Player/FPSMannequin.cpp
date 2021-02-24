@@ -462,6 +462,7 @@ bool AFPSMannequin::SR_MakeStepNoise_Validate(bool enable)
 	return true;
 }
 
+
 void AFPSMannequin::PlayFightAnim(EFightState State)
 {
 	MannequinFireComponent->PlayAnim(State);

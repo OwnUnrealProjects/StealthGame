@@ -9,6 +9,7 @@
 
 class UProjectileMovementComponent;
 class USphereComponent;
+class USoundCue;
 
 UCLASS()
 class FPSGAME_API AFPSStone : public AActor
@@ -27,7 +28,11 @@ protected:
 	/** Projectile movement component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
 	UProjectileMovementComponent* StoneMovement;
-	
+
+	UPROPERTY(EditDefaultsOnly, Category = "Debug")
+	bool DrawDebugShoneHitPoint;
+
+
 public:	
 	// Sets default values for this actor's properties
 	AFPSStone();
@@ -44,6 +49,13 @@ public:
 
 	void LaunchStone(float speed);
 
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void SR_StoneHitEffect(FHitResult HitPoint, FName EffectName);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MC_StoneHitEfect(FHitResult HitPoint, FName EffectName);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -55,7 +67,10 @@ public:
 private:
 
 	/** Stone hit Effect */
-	UPROPERTY(EditDefaultsOnly, Category = "Particle")
-	TMap<FName, UParticleSystem*> TM_ImpactParicles;
+	UPROPERTY(EditDefaultsOnly, Category = "TMap")
+	TMap<FName, UParticleSystem*> TM_ImpactParticle;
+
+	UPROPERTY(EditDefaultsOnly, Category = "TMap")
+	TMap<FName, USoundCue*> TM_ImpactSound;
 	
 };

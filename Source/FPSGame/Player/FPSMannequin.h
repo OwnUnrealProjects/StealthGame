@@ -256,6 +256,7 @@ public:
 
 		UFUNCTION(Server, Reliable, WithValidation)
 		void SR_MakeStepNoise(bool enable);
+	
 
 protected:
 
