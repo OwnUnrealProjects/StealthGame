@@ -43,6 +43,7 @@ UClass* AFPSLobbyGameMode::GetDefaultPawnClassForController_Implementation(ACont
 		return DefaultPawnClass;
 	}
 
+
 	if (InController == NULL)
 	{
 		LOG_S(FString("InController is NULL !!!"));
