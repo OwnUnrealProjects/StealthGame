@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 
 #include "../Public/FPSCharacter.h"
+#include "../Player/FPSMannequin.h"
 
 
 // Sets default values
@@ -42,7 +43,8 @@ void AFPSLaunchpad::OverlapLaunchPad(UPrimitiveComponent * OverlappedComponent, 
 	PadDirection.Pitch += 40;
 	FVector Force = PadDirection.Vector() * LaunchStrength;
 
-	AFPSCharacter* PlayerPawn = Cast<AFPSCharacter>(OtherActor);
+	//AFPSCharacter* PlayerPawn = Cast<AFPSCharacter>(OtherActor);
+	AFPSMannequin* PlayerPawn = Cast<AFPSMannequin>(OtherActor);
 	if (PlayerPawn)
 	{
 
